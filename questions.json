@@ -1,26 +1,86 @@
 [
   {
-    "topic": "Vocabulary",
+    "topic": "Numbers",
     "difficulty": "easy",
-    "question": "What does the word \"rapid\" mean?",
-    "choices": ["Very fast", "Very slow", "Very loud", "Very small"],
+    "question": "Which of the following is seven hundred and three thousand and twelve in numerals?",
+    "choices": ["730 012", "703 012", "73 012", "70 312"],
+    "answer_index": 1,
+    "explanation": "Seven hundred and three thousand and twelve is written as 703,012."
+  },
+  {
+    "topic": "Fractions",
+    "difficulty": "easy",
+    "question": "Divide 2 by 8/5.",
+    "choices": ["5/16", "4/5", "1 1/4", "3 1/5"],
+    "answer_index": 2,
+    "explanation": "Dividing by a fraction is the same as multiplying by its reciprocal."
+  },
+  {
+    "topic": "Decimals",
+    "difficulty": "easy",
+    "question": "Round 4.195 to 2 decimal places.",
+    "choices": ["4.10", "4.19", "4.20", "4.29"],
+    "answer_index": 2,
+    "explanation": "The third decimal is 5, so the second decimal rounds up."
+  },
+  {
+    "topic": "Decimals",
+    "difficulty": "easy",
+    "question": "Calculate 3 + 3/100 + 30/1000.",
+    "choices": ["3.033", "3.06", "3.33", "3.6"],
     "answer_index": 0,
-    "explanation": "Rapid means happening very quickly."
+    "explanation": "3/100 = 0.03 and 30/1000 = 0.03, so the total is 3.033."
   },
   {
-    "topic": "Math",
-    "difficulty": "easy",
-    "question": "What is 7 × 6?",
-    "choices": ["36", "42", "46", "48"],
-    "answer_index": 1,
-    "explanation": "7 times 6 equals 42."
+    "topic": "Geometry",
+    "difficulty": "medium",
+    "question": "The figure is made up of two squares and one quarter circle. The lengths of the squares are 7 cm and 3 cm respectively. Find the perimeter of the shaded part. (Take π = 22/7)",
+    "image": "images/Q5.png",
+    "choices": ["19.5 cm", "25 cm", "25.5 cm", "31 cm"],
+    "answer_index": 2,
+    "explanation": "The perimeter includes straight edges and the curved quarter-circle arc."
   },
   {
-    "topic": "Science",
+    "topic": "Volume",
     "difficulty": "easy",
-    "question": "Which of these is a planet?",
-    "choices": ["Moon", "Mars", "Sun", "Polaris"],
+    "question": "Find the volume of the solid shown.",
+    "image": "stepped_cuboid.png",
+    "choices": ["228 cm³", "288 cm³", "300 cm³", "372 cm³"],
     "answer_index": 1,
-    "explanation": "Mars is a planet in our solar system."
+    "explanation": "The volume is found by multiplying the total length, width and height."
+  },
+  {
+    "topic": "Average",
+    "difficulty": "easy",
+    "question": "The average of three numbers is 40. The sum of another two numbers is 50. What is the average of the five numbers?",
+    "choices": ["13", "18", "34", "65"],
+    "answer_index": 2,
+    "explanation": "Total sum is 170. Dividing by 5 gives an average of 34."
+  },
+  {
+    "topic": "Time",
+    "difficulty": "medium",
+    "question": "How much more time did the slowest runner take than the fastest runner?",
+    "image": "relay_race_table.png",
+    "choices": ["15 min", "20 min", "35 min", "55 min"],
+    "answer_index": 2,
+    "explanation": "Compare the start times to find the longest and shortest durations."
+  },
+  {
+    "topic": "Surface Area",
+    "difficulty": "medium",
+    "question": "A cuboid made up of 16 identical small cubes is painted green on all faces. It is cut into two identical cubes. Find the total area of the unpainted faces of the two big cubes.",
+    "image": "painted_cubes.png",
+    "choices": ["36 cm²", "72 cm²", "144 cm²", "216 cm²"],
+    "answer_index": 2,
+    "explanation": "Only the newly exposed faces are unpainted."
+  },
+  {
+    "topic": "Word Problems",
+    "difficulty": "medium",
+    "question": "Aaron had $55 more than Shanti at first. After Aaron used 2/5 of his money and Shanti used 1/3 of her money, Aaron had $27 more than Shanti. How much money did Shanti have left?",
+    "choices": ["$27", "$30", "$54", "$60"],
+    "answer_index": 3,
+    "explanation": "Solving the equations shows Shanti had $60 left."
   }
 ]
