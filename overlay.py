@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import sys
 import time
 from collections import deque
@@ -10,6 +11,13 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from pynput import keyboard, mouse
 
 from question_engine import QuestionEngine, Question
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed, use system env vars
 
 
 # -------------------- Settings --------------------
@@ -59,8 +67,9 @@ class OverlayWindow(QtWidgets.QWidget):
     A top-most, frameless overlay that does NOT accept focus.
     We listen for answers via global pynput hotkeys instead.
     """
-    def __init__(self):
+    def __init__(self, app_controller=None):
         super().__init__()
+        self.app_controller = app_controller
 
         self.setWindowFlags(
             QtCore.Qt.FramelessWindowHint
@@ -76,9 +85,8 @@ class OverlayWindow(QtWidgets.QWidget):
         self.setFocusPolicy(QtCore.Qt.NoFocus)
         self.setWindowFlag(QtCore.Qt.WindowDoesNotAcceptFocus, True)
 
-        # Optional: click-through so it never blocks the game mouse.
-        # Hotkeys are global anyway.
-        self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
+        # Allow mouse clicks on overlay for answering questions
+        # self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
 
         # UI
         self.card = QtWidgets.QFrame()
@@ -96,9 +104,9 @@ class OverlayWindow(QtWidgets.QWidget):
 
         self.choice_labels = []
         for i in range(4):
-            lbl = QtWidgets.QLabel("")
-            lbl.setWordWrap(True)
+            lbl = QtWidgets.QPushButton("")
             lbl.setObjectName("choice")
+            lbl.clicked.connect(lambda checked, idx=i: self.app_controller.answer(idx) if self.app_controller else None)
             self.choice_labels.append(lbl)
 
         self.hint = QtWidgets.QLabel("Answer with 1–4 • Esc hide • F9 snooze 10 min")
@@ -155,6 +163,11 @@ class OverlayWindow(QtWidgets.QWidget):
                 padding: 6px 8px;
                 border-radius: 10px;
                 background: rgba(255, 255, 255, 18);
+                border: none;
+                text-align: left;
+            }
+            #choice:hover {
+                background: rgba(255, 255, 255, 35);
             }
             #hint {
                 color: rgba(255, 255, 255, 140);
@@ -171,7 +184,7 @@ class OverlayWindow(QtWidgets.QWidget):
         for i, choice in enumerate(q.choices):
             self.choice_labels[i].setText(f"{i+1}) {choice}")
 
-        self.hint.setText("Answer with 1–4 • Esc hide • F9 snooze 10 min")
+        self.hint.setText("Answer with 1–4 or click choices • F9 snooze 5 min")
 
     def show_feedback(self, correct: bool, explanation: str, dismiss_ms: int):
         if correct:
@@ -189,7 +202,7 @@ class BrainBuffApp(QtCore.QObject):
         super().__init__()
         self.settings = settings
 
-        self.overlay = OverlayWindow()
+        self.overlay = OverlayWindow(self)
         self.engine = QuestionEngine(
             local_bank_path="questions.json",
             ai_cache_path="ai_cache.jsonl",
@@ -234,6 +247,9 @@ class BrainBuffApp(QtCore.QObject):
         self.m_listener.start()
 
     def _record_input(self):
+        # Don't record input when overlay is visible (waiting for answer)
+        if self.overlay_visible:
+            return
         now = time.time()
         self.input_times.append(now)
 
@@ -247,15 +263,11 @@ class BrainBuffApp(QtCore.QObject):
         self._record_input()
 
     def _on_key_press(self, key):
-        # Record activity always
+        # Record activity only if overlay not visible
         self._record_input()
 
         # Global hotkeys (do NOT require overlay focus)
         try:
-            if key == keyboard.Key.esc:
-                self.hide_overlay()
-                return
-
             if key == keyboard.Key.f9:
                 self.snooze()
                 return
@@ -322,20 +334,13 @@ class BrainBuffApp(QtCore.QObject):
         geo = screen.availableGeometry()
 
         self.overlay.adjustSize()
-        w = 520
-        h = 260
+        w = 700  # Larger width
+        h = 400  # Larger height
         self.overlay.setFixedSize(w, h)
 
-        margin = int(self.settings.overlay_margin_px)
-
-        pos = (self.settings.overlay_position or "top_right").lower()
-        if pos == "center":
-            x = geo.x() + (geo.width() - w) // 2
-            y = geo.y() + (geo.height() - h) // 2
-        else:
-            # top_right default
-            x = geo.x() + geo.width() - w - margin
-            y = geo.y() + margin
+        # Always center the overlay
+        x = geo.x() + (geo.width() - w) // 2
+        y = geo.y() + (geo.height() - h) // 2
 
         self.overlay.move(x, y)
 
@@ -343,8 +348,12 @@ class BrainBuffApp(QtCore.QObject):
         # Refresh AI toggle/model (in case settings.json edited live)
         self.engine.set_ai(self.settings.ai_questions_enabled, self.settings.ai_model)
 
+        # Random topics for variety
+        topics = ["Mathematics", "Science", "English", "History", "Geography", "General Knowledge"]
+        random_topic = random.choice(topics)
+        
         q = self.engine.get_question(
-            topic=self.settings.ai_topic,
+            topic=random_topic,
             grade_level=self.settings.ai_grade_level,
             difficulty=self.settings.ai_difficulty,
         )
@@ -362,15 +371,6 @@ class BrainBuffApp(QtCore.QObject):
         self.overlay.raise_()
         self.overlay_visible = True
 
-    def hide_overlay(self):
-        if self.overlay_visible:
-            self.overlay.hide()
-            self.overlay_visible = False
-
-    def snooze(self):
-        self.hide_overlay()
-        self.snoozed_until = time.time() + float(self.settings.snooze_minutes) * 60.0
-
     def answer(self, idx: int):
         if not self.overlay_visible or not self.overlay.current_question:
             return
@@ -378,12 +378,21 @@ class BrainBuffApp(QtCore.QObject):
         q = self.overlay.current_question
         correct = (idx == q.answer_index)
 
-        # Show small feedback then dismiss
+        # Show feedback then hide after timer
         explanation = q.explanation or ""
         self.overlay.show_feedback(correct, explanation, int(self.settings.auto_dismiss_after_answer_ms))
+        
+        # Hide overlay after feedback timer
+        QtCore.QTimer.singleShot(int(self.settings.auto_dismiss_after_answer_ms), self.hide_overlay)
 
-        # Mark as hidden after timer fires
-        QtCore.QTimer.singleShot(int(self.settings.auto_dismiss_after_answer_ms) + 50, self.hide_overlay)
+    def hide_overlay(self):
+        if self.overlay_visible:
+            self.overlay.hide()
+            self.overlay_visible = False
+
+    def snooze(self):
+        self.hide_overlay()
+        self.snoozed_until = time.time() + 5.0 * 60.0  # 5 minutes
 
 
 # -------------------- main --------------------

@@ -11,11 +11,11 @@
   "ai_topic": "Vocabulary",
   "ai_grade_level": "Primary 3–6",
   "ai_difficulty": "easy",
-  "ai_model": "gpt-4.1-mini",
+  "ai_model": "gpt-4o-mini",
 
   "overlay_position": "top_right",
   "overlay_margin_px": 40,
   "monitor_index": 0,
 
-  "auto_dismiss_after_answer_ms": 1200
+  "auto_dismiss_after_answer_ms": 3000
 }

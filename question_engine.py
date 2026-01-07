@@ -210,22 +210,21 @@ class QuestionEngine:
         }
 
         try:
-            # Responses API
+            # Chat Completions API
             resp = requests.post(
-                "https://api.openai.com/v1/responses",
+                "https://api.openai.com/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
                     "model": self.ai_model,
-                    "input": [
-                        {"role": "system", "content": [{"type": "text", "text": system}]},
-                        {"role": "user", "content": [{"type": "text", "text": json.dumps(user, ensure_ascii=False)}]},
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": json.dumps(user, ensure_ascii=False)},
                     ],
-                    # Keep it small and deterministic-ish:
                     "temperature": 0.4,
-                    "max_output_tokens": 220,
+                    "max_tokens": 220,
                 },
                 timeout=10,
             )
@@ -234,10 +233,11 @@ class QuestionEngine:
                 return None
 
             data = resp.json()
-
-            # Extract text output robustly:
-            text = self._extract_text_from_responses(data)
-            if not text:
+            
+            # Extract content from chat completion
+            if "choices" in data and len(data["choices"]) > 0:
+                text = data["choices"][0]["message"]["content"].strip()
+            else:
                 return None
 
             # Must be JSON only:
