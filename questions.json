@@ -1,0 +1,26 @@
+[
+  {
+    "topic": "Vocabulary",
+    "difficulty": "easy",
+    "question": "What does the word \"rapid\" mean?",
+    "choices": ["Very fast", "Very slow", "Very loud", "Very small"],
+    "answer_index": 0,
+    "explanation": "Rapid means happening very quickly."
+  },
+  {
+    "topic": "Math",
+    "difficulty": "easy",
+    "question": "What is 7 × 6?",
+    "choices": ["36", "42", "46", "48"],
+    "answer_index": 1,
+    "explanation": "7 times 6 equals 42."
+  },
+  {
+    "topic": "Science",
+    "difficulty": "easy",
+    "question": "Which of these is a planet?",
+    "choices": ["Moon", "Mars", "Sun", "Polaris"],
+    "answer_index": 1,
+    "explanation": "Mars is a planet in our solar system."
+  }
+]
