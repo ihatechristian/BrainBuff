@@ -194,6 +194,7 @@ class BrainBuffApp(QtCore.QObject):
         return len(self.popups_history) < int(self.settings.max_popups_per_hour)
 
     def _update_logic(self):
+
         now = time.time()
         self._cleanup_old_inputs(now)
         count = self._inputs_in_window()
@@ -208,6 +209,18 @@ class BrainBuffApp(QtCore.QObject):
         low_activity = count <= int(self.settings.low_activity_threshold)
         if low_activity and self._cooldown_ok(now) and self._snooze_ok(now) and self._max_per_hour_ok(now):
             self.show_question()
+
+        if now % 2 < 0.2:  # roughly every ~2s
+            dt = now - self.last_popup_time
+            print(
+                "count=", count,
+                "low=", (count <= self.settings.low_activity_threshold),
+                "cooldown=", self._cooldown_ok(now),
+                "dt=", round(dt, 3),
+                "snooze=", self._snooze_ok(now),
+                "max=", self._max_per_hour_ok(now),
+                "visible=", self.overlay_visible
+            )
 
     def _point_over_overlay(self, x: int, y: int) -> bool:
         if not self.overlay_visible or not self.overlay.isVisible():
@@ -240,6 +253,8 @@ class BrainBuffApp(QtCore.QObject):
 
     # ---------- Actions ----------
     def show_question(self):
+        print("SHOW QUESTION", time.time())
+
         self.engine.set_ai_mode(self.settings.ai_mode, self.settings.ai_model)
 
         topics = ["Mathematics", "Science", "English", "History", "Geography", "General Knowledge"]
@@ -280,6 +295,8 @@ class BrainBuffApp(QtCore.QObject):
         QtCore.QTimer.singleShot(int(self.settings.auto_dismiss_after_answer_ms), self.hide_overlay)
 
     def hide_overlay(self):
+        print("HIDE OVERLAY", time.time())
+
         if self.overlay_visible:
             self.overlay.hide()
             self.overlay_visible = False
