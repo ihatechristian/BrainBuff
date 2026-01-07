@@ -232,6 +232,7 @@ class BrainBuffApp(QtCore.QObject):
         screens = QtGui.QGuiApplication.screens()
         if not screens:
             return
+
         mi = int(self.settings.monitor_index)
         if mi < 0 or mi >= len(screens):
             mi = 0
@@ -239,8 +240,10 @@ class BrainBuffApp(QtCore.QObject):
         screen = screens[mi]
         geo = screen.availableGeometry()
 
-        w, h = 700, 400
-        self.overlay.setFixedSize(w, h)
+        # DO NOT force size here. Let overlay_ui auto-size for images.
+        # Just use current size after set_question() has run.
+        w = self.overlay.width()
+        h = self.overlay.height()
 
         if self.settings.overlay_position == "top_right":
             x = geo.x() + geo.width() - w - int(self.settings.overlay_margin_px)
@@ -267,13 +270,16 @@ class BrainBuffApp(QtCore.QObject):
         )
         source = getattr(self.engine, "last_source", "local")
 
+        # Set question FIRST (overlay_ui may auto-resize for images)
         self.overlay.set_question(
             q=q,
             source=source,
             ai_mode=self.settings.ai_mode,
             snooze_minutes=int(self.settings.snooze_minutes),
         )
-        self._place_overlay()
+
+        # Place AFTER Qt has applied layout / resize changes
+        QtCore.QTimer.singleShot(0, self._place_overlay)
 
         now = time.time()
         self.last_popup_time = now
