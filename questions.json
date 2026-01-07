@@ -44,7 +44,7 @@
     "topic": "Volume",
     "difficulty": "easy",
     "question": "Find the volume of the solid shown.",
-    "image": "stepped_cuboid.png",
+    "image": "images/Q6.png",
     "choices": ["228 cm³", "288 cm³", "300 cm³", "372 cm³"],
     "answer_index": 1,
     "explanation": "The volume is found by multiplying the total length, width and height."
@@ -61,7 +61,7 @@
     "topic": "Time",
     "difficulty": "medium",
     "question": "How much more time did the slowest runner take than the fastest runner?",
-    "image": "relay_race_table.png",
+    "image": "images/Q8.png",
     "choices": ["15 min", "20 min", "35 min", "55 min"],
     "answer_index": 2,
     "explanation": "Compare the start times to find the longest and shortest durations."
@@ -70,7 +70,7 @@
     "topic": "Surface Area",
     "difficulty": "medium",
     "question": "A cuboid made up of 16 identical small cubes is painted green on all faces. It is cut into two identical cubes. Find the total area of the unpainted faces of the two big cubes.",
-    "image": "painted_cubes.png",
+    "image": "images/Q9.png",
     "choices": ["36 cm²", "72 cm²", "144 cm²", "216 cm²"],
     "answer_index": 2,
     "explanation": "Only the newly exposed faces are unpainted."
