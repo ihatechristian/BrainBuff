@@ -1,11 +1,9 @@
+# question_engine.py
 import json
 import os
 import random
-import time
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any, Tuple
-
-import requests
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -41,31 +39,43 @@ class QuestionEngine:
     """
     Provides questions from:
       A) local questions.json
-      B) optional OpenAI generation (STRICT JSON) with jsonl cache fallback
+      B) optional OpenAI generation with jsonl cache fallback
+
+    ai_mode:
+      - "off"   -> local only
+      - "cache" -> cached AI only (NO API calls ever)
+      - "live"  -> cached AI first, else generate via API and cache (uses tokens)
     """
 
     def __init__(
         self,
         local_bank_path: str = "questions.json",
         ai_cache_path: str = "ai_cache.jsonl",
-        ai_enabled: bool = False,
+        ai_mode: str = "off",
         ai_model: str = "gpt-4.1-mini",
     ):
         self.local_bank_path = local_bank_path
         self.ai_cache_path = ai_cache_path
-        self.ai_enabled = ai_enabled
+        self.ai_mode = (ai_mode or "off").strip().lower()
         self.ai_model = ai_model
 
         self._local_questions: List[Question] = []
         self._ai_cache: List[Question] = []
         self._ai_cache_index: Dict[str, List[int]] = {}  # key -> indices
 
+        # Debug/info for UI
+        self.last_source: str = "local"  # cache|live|local|fallback
+
         self.load_local_bank()
         self.load_ai_cache()
 
-    def set_ai(self, enabled: bool, model: str):
-        self.ai_enabled = enabled
-        self.ai_model = model
+    def set_ai_mode(self, mode: str, model: Optional[str] = None):
+        mode = (mode or "off").strip().lower()
+        if mode not in ("off", "cache", "live"):
+            mode = "off"
+        self.ai_mode = mode
+        if model:
+            self.ai_model = model
 
     # ---------- Local bank ----------
     def load_local_bank(self) -> None:
@@ -84,7 +94,6 @@ class QuestionEngine:
                     if ok:
                         self._local_questions.append(q)
         except Exception:
-            # Keep running even if file is malformed
             self._local_questions = []
 
     def get_local_question(self) -> Optional[Question]:
@@ -140,34 +149,42 @@ class QuestionEngine:
         return self._ai_cache[random.choice(indices)]
 
     # ---------- Public API ----------
-    def get_question(
-        self,
-        topic: str,
-        grade_level: str,
-        difficulty: str,
-    ) -> Question:
+    def get_question(self, topic: str, grade_level: str, difficulty: str) -> Question:
         """
-        Priority:
-          1) If AI enabled and key exists:
-              - Use cached AI question if available
-              - Otherwise generate via OpenAI and cache it
-          2) Fallback to local bank
-          3) Last resort: a built-in safe question
+        ai_mode == "off":
+            local -> fallback
+
+        ai_mode == "cache":
+            cached AI (NO API) -> local -> fallback
+
+        ai_mode == "live":
+            cached AI -> API generate -> local -> fallback
         """
-        if self.ai_enabled and os.getenv("OPENAI_API_KEY"):
+        mode = (self.ai_mode or "off").strip().lower()
+
+        # 1) Cache (NO TOKENS)
+        if mode in ("cache", "live"):
             cached = self.get_cached_ai_question(topic, difficulty)
             if cached:
+                self.last_source = "cache"
                 return cached
 
+        # 2) Live generation (TOKENS) only if explicitly allowed
+        if mode == "live" and os.getenv("OPENAI_API_KEY"):
             generated = self._generate_ai_question(topic, grade_level, difficulty)
             if generated:
                 self._append_ai_cache(generated)
+                self.last_source = "live"
                 return generated
 
+        # 3) Local fallback
         local = self.get_local_question()
         if local:
+            self.last_source = "local"
             return local
 
+        # 4) Built-in fallback
+        self.last_source = "fallback"
         return Question(
             topic="General",
             difficulty="easy",
@@ -177,17 +194,21 @@ class QuestionEngine:
             explanation="9 is the largest among the options.",
         )
 
-    # ---------- OpenAI ----------
+    # ---------- OpenAI (only used in ai_mode == 'live') ----------
     def _generate_ai_question(self, topic: str, grade_level: str, difficulty: str) -> Optional[Question]:
         """
-        Uses OpenAI Responses API via requests.
+        Uses Chat Completions via requests.
         Returns STRICT JSON (no markdown). Validates schema + guardrails.
         """
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             return None
 
-        # Strong instruction: JSON only, exact schema, 4 choices.
+        try:
+            import requests  # lazy import so you don't need requests unless you use live mode
+        except Exception:
+            return None
+
         system = (
             "You are a question generator. Return STRICT JSON ONLY. "
             "No markdown. No commentary. No extra keys. "
@@ -205,12 +226,11 @@ class QuestionEngine:
                 "question": "string",
                 "choices": ["A", "B", "C", "D"],
                 "answer_index": "0-3",
-                "explanation": "string"
-            }
+                "explanation": "string",
+            },
         }
 
         try:
-            # Chat Completions API
             resp = requests.post(
                 "https://api.openai.com/v1/chat/completions",
                 headers={
@@ -233,73 +253,46 @@ class QuestionEngine:
                 return None
 
             data = resp.json()
-            
-            # Extract content from chat completion
-            if "choices" in data and len(data["choices"]) > 0:
-                text = data["choices"][0]["message"]["content"].strip()
-            else:
+            if "choices" not in data or not data["choices"]:
                 return None
 
-            # Must be JSON only:
+            text = data["choices"][0]["message"]["content"].strip()
+
+            # Must be JSON only
             obj = json.loads(text)
 
             q = self._question_from_dict(obj)
             if not q:
                 return None
 
-            # Guardrails:
+            # Guardrails
             if len(q.choices) != 4:
                 return None
             if not (0 <= q.answer_index <= 3):
                 return None
             if q.difficulty not in ["easy", "medium", "hard"]:
-                # normalize if model slightly deviates
                 q.difficulty = difficulty if difficulty in ["easy", "medium", "hard"] else "easy"
             if len((q.explanation or "").split()) > 35:
-                # Keep it short
                 q.explanation = " ".join((q.explanation or "").split()[:35])
 
             ok, _ = q.is_valid()
             return q if ok else None
-
         except Exception:
             return None
-
-    def _extract_text_from_responses(self, data: Dict[str, Any]) -> str:
-        """
-        Handles common Responses API shapes.
-        """
-        # Preferred: output_text
-        if isinstance(data, dict) and isinstance(data.get("output_text"), str):
-            return data["output_text"].strip()
-
-        # Fallback: parse output array
-        out = data.get("output")
-        if isinstance(out, list):
-            chunks = []
-            for item in out:
-                content = item.get("content")
-                if isinstance(content, list):
-                    for c in content:
-                        if c.get("type") == "output_text" and isinstance(c.get("text"), str):
-                            chunks.append(c["text"])
-                        elif c.get("type") == "text" and isinstance(c.get("text"), str):
-                            chunks.append(c["text"])
-            joined = "".join(chunks).strip()
-            return joined
-
-        return ""
 
     # ---------- Helpers ----------
     def _question_from_dict(self, item: Dict[str, Any]) -> Optional[Question]:
         if not isinstance(item, dict):
             return None
         try:
+            choices = item.get("choices", [])
+            if not isinstance(choices, list):
+                choices = []
             return Question(
                 topic=str(item.get("topic", "")).strip(),
                 difficulty=str(item.get("difficulty", "")).strip(),
                 question=str(item.get("question", "")).strip(),
-                choices=list(item.get("choices", [])),
+                choices=list(choices),
                 answer_index=int(item.get("answer_index", -1)),
                 explanation=str(item.get("explanation", "") or "").strip(),
             )
