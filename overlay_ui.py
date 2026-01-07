@@ -1,14 +1,14 @@
 # overlay_ui.py
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Callable, List, Optional
 
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 
-# If you already have Question in question_engine.py, we can reuse it.
-# Otherwise this fallback dataclass lets overlay_ui.py run standalone.
+# Reuse Question if available; fallback so this file can run standalone.
 try:
     from question_engine import Question  # type: ignore
 except Exception:
@@ -20,18 +20,25 @@ except Exception:
         choices: List[str]
         answer_index: int
         explanation: str = ""
+        image: Optional[str] = None
 
 
 class OverlayWindow(QtWidgets.QWidget):
     """
-    UI-only overlay window.
-    - Accepts an optional on_answer callback (idx: 0..3).
-    - Can be run standalone (see __main__ demo at bottom).
+    UI-only overlay window that supports an optional image path:
+      q.image == "images/Q5.png"
+
+    No scroll. The image is always scaled to fit (KeepAspectRatio) so the full diagram is visible.
+    The window also auto-resizes (within screen limits) when an image is present.
     """
+
     def __init__(self, on_answer: Optional[Callable[[int], None]] = None):
         super().__init__()
         self.on_answer = on_answer
         self.current_question: Optional[Question] = None
+
+        # Store the original pixmap for clean rescaling on resize
+        self._diagram_pixmap: Optional[QtGui.QPixmap] = None
 
         self.setWindowFlags(
             QtCore.Qt.FramelessWindowHint
@@ -59,6 +66,17 @@ class OverlayWindow(QtWidgets.QWidget):
         self.question_label.setWordWrap(True)
         self.question_label.setObjectName("question")
 
+        # Diagram/image area (NO scroll)
+        self.image_label = QtWidgets.QLabel("")
+        self.image_label.setObjectName("diagram")
+        self.image_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.image_label.setVisible(False)
+        self.image_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Expanding
+        )
+
+        # Choices
         self.choice_buttons: list[QtWidgets.QPushButton] = []
         for i in range(4):
             btn = QtWidgets.QPushButton("")
@@ -75,8 +93,13 @@ class OverlayWindow(QtWidgets.QWidget):
         layout.addWidget(self.title)
         layout.addWidget(self.meta)
         layout.addWidget(self.question_label)
+
+        # Put the image between the question and answers
+        layout.addWidget(self.image_label, stretch=1)
+
         for btn in self.choice_buttons:
             layout.addWidget(btn)
+
         layout.addSpacing(4)
         layout.addWidget(self.hint)
 
@@ -87,7 +110,7 @@ class OverlayWindow(QtWidgets.QWidget):
         self._apply_styles()
 
         # Default size (controller can override)
-        self.setFixedSize(700, 400)
+        self.resize(720, 520)
 
     def _apply_styles(self):
         self.setStyleSheet("""
@@ -111,6 +134,12 @@ class OverlayWindow(QtWidgets.QWidget):
                 font-weight: 600;
                 padding-top: 4px;
                 padding-bottom: 4px;
+            }
+            #diagram {
+                background: rgba(255, 255, 255, 10);
+                border: 1px solid rgba(255, 255, 255, 25);
+                border-radius: 12px;
+                padding: 8px;
             }
             #choice {
                 color: rgba(255, 255, 255, 210);
@@ -137,11 +166,129 @@ class OverlayWindow(QtWidgets.QWidget):
         if self.on_answer:
             self.on_answer(idx)
 
+    def _resolve_image_path(self, img_path: str) -> str:
+        if os.path.isabs(img_path):
+            return img_path
+        # relative to where you run the script (project root)
+        return os.path.join(os.getcwd(), img_path)
+
+    def _available_diagram_box(self) -> QtCore.QSize:
+        """
+        Compute the box we can use for the diagram inside the current window,
+        accounting for margins and other widgets.
+        """
+        # Width inside the card
+        box_w = max(120, self.card.width() - 40)
+
+        # Height available: window height minus fixed UI elements
+        fixed_h = 0
+        fixed_h += self.title.sizeHint().height()
+        fixed_h += self.meta.sizeHint().height()
+        fixed_h += self.question_label.sizeHint().height()
+        fixed_h += self.hint.sizeHint().height()
+
+        # Buttons (roughly)
+        for b in self.choice_buttons:
+            fixed_h += b.sizeHint().height()
+
+        # Layout spacing + margins (rough estimate)
+        fixed_h += 16 + 14 + 16  # top/bottom padding-ish
+        fixed_h += 10 * 8        # spacing between items
+
+        # Whatever remains goes to the diagram
+        box_h = max(120, int(self.height() - fixed_h))
+        return QtCore.QSize(box_w, box_h)
+
+    def _render_diagram(self):
+        """Scale the original pixmap into the available box (KeepAspectRatio)."""
+        if not self._diagram_pixmap or self._diagram_pixmap.isNull():
+            return
+
+        box = self._available_diagram_box()
+        scaled = self._diagram_pixmap.scaled(
+            box,
+            QtCore.Qt.KeepAspectRatio,
+            QtCore.Qt.SmoothTransformation
+        )
+        self.image_label.setPixmap(scaled)
+
+    def _auto_resize_for_diagram(self):
+        """
+        Increase window size (within screen limits) so the diagram has room.
+        This helps avoid tiny diagrams.
+        """
+        screen = QtWidgets.QApplication.primaryScreen()
+        if not screen:
+            return
+        geo = screen.availableGeometry()
+
+        # cap window size to screen
+        max_w = int(geo.width() * 0.90)
+        max_h = int(geo.height() * 0.90)
+
+        # baseline size
+        target_w = min(max_w, max(720, self.width()))
+        target_h = min(max_h, max(520, self.height()))
+
+        # If we have a diagram, try to allocate more height
+        if self._diagram_pixmap and not self._diagram_pixmap.isNull():
+            # allow taller window for diagrams, but within cap
+            target_h = min(max_h, max(target_h, 680))
+
+            # allow wider window if diagram is wide (still capped)
+            if self._diagram_pixmap.width() > 900:
+                target_w = min(max_w, max(target_w, 900))
+
+        self.resize(target_w, target_h)
+
+        # Optional: keep it on-screen (center-ish)
+        x = geo.x() + (geo.width() - self.width()) // 2
+        y = geo.y() + (geo.height() - self.height()) // 2
+        self.move(x, y)
+
+    def _set_image(self, img_path: Optional[str]):
+        if not img_path:
+            self._diagram_pixmap = None
+            self.image_label.clear()
+            self.image_label.setVisible(False)
+            return
+
+        path = self._resolve_image_path(img_path)
+        if not os.path.exists(path):
+            self._diagram_pixmap = None
+            self.image_label.setText(f"(Image not found: {img_path})")
+            self.image_label.setVisible(True)
+            return
+
+        pix = QtGui.QPixmap(path)
+        if pix.isNull():
+            self._diagram_pixmap = None
+            self.image_label.setText(f"(Could not load image: {img_path})")
+            self.image_label.setVisible(True)
+            return
+
+        self._diagram_pixmap = pix
+        self.image_label.setVisible(True)
+
+        # Resize window to give the image space, then render scaled
+        self._auto_resize_for_diagram()
+        self._render_diagram()
+
+    def resizeEvent(self, event: QtGui.QResizeEvent):
+        super().resizeEvent(event)
+        # Re-render diagram on resize so it always fits
+        if self.image_label.isVisible():
+            self._render_diagram()
+
     def set_question(self, q: Question, source: str = "local", ai_mode: str = "off", snooze_minutes: int = 10):
         self.current_question = q
         self.title.setText("BrainBuff")
         self.meta.setText(f"Topic: {q.topic} • Difficulty: {q.difficulty} • Source: {source.upper()}")
         self.question_label.setText(q.question)
+
+        # Show/hide diagram based on q.image
+        img_path = getattr(q, "image", None)
+        self._set_image(img_path)
 
         for i, choice in enumerate(q.choices[:4]):
             self.choice_buttons[i].setText(f"{i+1}) {choice}")
@@ -149,6 +296,9 @@ class OverlayWindow(QtWidgets.QWidget):
         self.hint.setText(
             f"Click choices • (Full app: 1–4 answer, F9 snooze {snooze_minutes}m, F10 mode {ai_mode.upper()})"
         )
+
+        # Let Qt lay out labels first, then re-render (important for correct sizeHint)
+        QtCore.QTimer.singleShot(0, self._render_diagram)
 
     def show_feedback(self, correct: bool, explanation: str = ""):
         if correct:
@@ -159,27 +309,19 @@ class OverlayWindow(QtWidgets.QWidget):
 
 # -------------------- Standalone demo --------------------
 
-def _demo_center(win: QtWidgets.QWidget):
-    screen = QtWidgets.QApplication.primaryScreen()
-    if not screen:
-        return
-    geo = screen.availableGeometry()
-    x = geo.x() + (geo.width() - win.width()) // 2
-    y = geo.y() + (geo.height() - win.height()) // 2
-    win.move(x, y)
-
-
 def demo_main():
     app = QtWidgets.QApplication([])
+
     overlay = OverlayWindow()
 
     sample = Question(
-        topic="Demo",
-        difficulty="easy",
-        question="Overlay UI test — what is 2 + 2?",
-        choices=["3", "4", "5", "22"],
-        answer_index=1,
-        explanation="2 + 2 = 4.",
+        topic="Geometry",
+        difficulty="medium",
+        question="Demo: The figure is made up of two squares and one quarter circle...",
+        image="images/Q5.png",
+        choices=["19.5 cm", "25 cm", "25.5 cm", "31 cm"],
+        answer_index=2,
+        explanation="Perimeter includes straight edges and the quarter-circle arc."
     )
 
     def on_answer(idx: int):
@@ -187,7 +329,6 @@ def demo_main():
 
     overlay.set_answer_handler(on_answer)
     overlay.set_question(sample, source="local", ai_mode="off", snooze_minutes=10)
-    _demo_center(overlay)
     overlay.show()
 
     app.exec()

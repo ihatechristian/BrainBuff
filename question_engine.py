@@ -14,6 +14,7 @@ class Question:
     choices: List[str]  # exactly 4
     answer_index: int  # 0..3
     explanation: str = ""
+    image: Optional[str] = None  # <-- NEW: path like "images/Q5.png"
 
     def is_valid(self) -> Tuple[bool, str]:
         if not isinstance(self.question, str) or not self.question.strip():
@@ -32,6 +33,15 @@ class Question:
             self.explanation = ""
         if not isinstance(self.explanation, str):
             return False, "explanation must be string"
+
+        # image is optional but if provided must be a non-empty string
+        if self.image is not None:
+            if not isinstance(self.image, str):
+                return False, "image must be string or null"
+            if not self.image.strip():
+                # treat empty string as None
+                self.image = None
+
         return True, "ok"
 
 
@@ -192,6 +202,7 @@ class QuestionEngine:
             choices=["2", "9", "5", "1"],
             answer_index=1,
             explanation="9 is the largest among the options.",
+            image=None,
         )
 
     # ---------- OpenAI (only used in ai_mode == 'live') ----------
@@ -213,7 +224,8 @@ class QuestionEngine:
             "You are a question generator. Return STRICT JSON ONLY. "
             "No markdown. No commentary. No extra keys. "
             "Ensure there are exactly 4 choices. answer_index must be 0-3 and match the correct choice. "
-            "Explanation must be 1-2 short sentences."
+            "Explanation must be 1-2 short sentences. "
+            "If an image is required, set image to a string file path; otherwise set image to null."
         )
 
         user = {
@@ -227,6 +239,7 @@ class QuestionEngine:
                 "choices": ["A", "B", "C", "D"],
                 "answer_index": "0-3",
                 "explanation": "string",
+                "image": "string|null",
             },
         }
 
@@ -288,6 +301,13 @@ class QuestionEngine:
             choices = item.get("choices", [])
             if not isinstance(choices, list):
                 choices = []
+
+            img = item.get("image", None)
+            if img is not None:
+                img = str(img).strip()
+                if not img:
+                    img = None
+
             return Question(
                 topic=str(item.get("topic", "")).strip(),
                 difficulty=str(item.get("difficulty", "")).strip(),
@@ -295,6 +315,7 @@ class QuestionEngine:
                 choices=list(choices),
                 answer_index=int(item.get("answer_index", -1)),
                 explanation=str(item.get("explanation", "") or "").strip(),
+                image=img,
             )
         except Exception:
             return None
