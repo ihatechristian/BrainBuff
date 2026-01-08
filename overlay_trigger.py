@@ -111,13 +111,15 @@ class BrainBuffApp(QtCore.QObject):
         self.tick.timeout.connect(self._update_logic)
         self.tick.start()
 
+        self._last_move_time = 0.0
+        self._move_throttle_sec = 0.12  # ~8 moves/sec
+
         # Global listeners
         self._start_global_listeners()
 
         self._place_overlay()
 
-        self._last_move_time = 0.0
-        self._move_throttle_sec = 0.12  # ~8 moves/sec
+
 
     # ---------- Global input ----------
     def _start_global_listeners(self):
@@ -201,6 +203,10 @@ class BrainBuffApp(QtCore.QObject):
 
         # If visible and user resumes heavy activity, hide (after grace period)
         if self.overlay_visible:
+            # If the cursor is over the overlay, never hide it due to activity spikes.
+            if self.overlay.frameGeometry().contains(QtGui.QCursor.pos()):
+                return
+
             if (now - self.overlay_shown_at) >= 2.0:
                 if count >= int(self.settings.high_activity_spike_threshold):
                     self.hide_overlay()
@@ -223,10 +229,16 @@ class BrainBuffApp(QtCore.QObject):
             )
 
     def _point_over_overlay(self, x: int, y: int) -> bool:
+        # Use Qt cursor coordinates to avoid DPI scaling mismatch with pynput.
         if not self.overlay_visible or not self.overlay.isVisible():
             return False
-        geo = self.overlay.frameGeometry()  # screen coords
-        return geo.contains(QtCore.QPoint(int(x), int(y)))
+        pos = QtGui.QCursor.pos()  # global position in Qt coords
+        return self.overlay.frameGeometry().contains(pos)
+
+    def _on_mouse_scroll(self, x, y, dx, dy):
+        if self._point_over_overlay(x, y):
+            return
+        self.sig_activity.emit()
 
     def _place_overlay(self):
         screens = QtGui.QGuiApplication.screens()

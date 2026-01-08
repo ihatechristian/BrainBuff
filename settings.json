@@ -1,9 +1,9 @@
 {
   "activity_window_sec": 8,
   "low_activity_threshold": 6,
-  "high_activity_spike_threshold": 14,
+  "high_activity_spike_threshold": 20,
 
-  "cooldown_sec": 10,
+  "cooldown_sec": 2,
   "snooze_minutes": 10,
   "max_popups_per_hour": 9999,
 
