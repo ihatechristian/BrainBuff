@@ -116,6 +116,28 @@ class SurvivorGame(QtWidgets.QWidget):
         # Put overlay near top-right of the same screen
         self._place_overlay()
 
+        # --- Retry button (shown on game over) ---
+        self.retry_btn = QtWidgets.QPushButton("Retry", self)
+        self.retry_btn.setFixedSize(180, 44)
+        self.retry_btn.clicked.connect(self.reset_game)
+        self.retry_btn.setCursor(QtCore.Qt.PointingHandCursor)
+        self.retry_btn.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 255, 255, 22);
+                color: white;
+                border: 1px solid rgba(255, 255, 255, 40);
+                border-radius: 12px;
+                font-size: 14px;
+                font-weight: 700;
+            }
+            QPushButton:hover {
+                background: rgba(255, 255, 255, 35);
+            }
+        """)
+        self.retry_btn.hide()
+        self._position_retry_button()
+
+
     # -------------------- Overlay helpers --------------------
 
     def _place_overlay(self):
@@ -405,6 +427,7 @@ class SurvivorGame(QtWidgets.QWidget):
                 if self.player_hp <= 0:
                     self.game_over = True
                     self._hide_quiz()
+                    self._set_retry_visible(True)
                     break
 
     # -------------------- Rendering --------------------
@@ -470,6 +493,57 @@ class SurvivorGame(QtWidgets.QWidget):
             painter.drawText(self.rect(), QtCore.Qt.AlignCenter, "GAME OVER")
 
         painter.end()
+
+    def _position_retry_button(self):
+        # Center the retry button
+        x = (self.width() - self.retry_btn.width()) // 2
+        y = (self.height() // 2) + 40
+        self.retry_btn.move(x, y)
+        self.retry_btn.raise_()
+
+    def resizeEvent(self, event: QtGui.QResizeEvent):
+        super().resizeEvent(event)
+        self._position_retry_button()
+
+    def _set_retry_visible(self, visible: bool):
+        if visible:
+            self.retry_btn.show()
+            self._position_retry_button()
+        else:
+            self.retry_btn.hide()
+
+    def reset_game(self):
+        # Hide overlays/UI
+        self._hide_quiz()
+        self._set_retry_visible(False)
+
+        # Reset core state
+        self.game_over = False
+        self.paused_for_quiz = False
+        self.overlay_visible = False
+
+        self.player_x = self.width() * 0.5
+        self.player_y = self.height() * 0.5
+        self.player_hp = self.max_hp
+
+        self.bullets.clear()
+        self.enemies.clear()
+        self.keys.clear()
+
+        self.score = 0
+        self.xp = 0
+
+        # Reset timers/accumulators
+        self._last_time = time.time()
+        self._accum_shoot = 0.0
+        self._accum_spawn = 0.0
+
+        # Reset quiz idle logic
+        self.last_input_time = time.time()
+        self.last_quiz_time = 0.0
+
+        self.update()
+
 
 
 # -------------------- Main --------------------
