@@ -1,21 +1,21 @@
 {
-  "activity_window_sec": 8,
-  "low_activity_threshold": 6,
-  "high_activity_spike_threshold": 20,
+  "activity_window_sec": 3,
+  "low_activity_threshold": 3,
+  "high_activity_spike_threshold": 25,
 
-  "cooldown_sec": 2,
-  "snooze_minutes": 10,
+  "cooldown_sec": 8,
+  "snooze_minutes": 3,
   "max_popups_per_hour": 9999,
 
-  "ai_questions_enabled": true,
-  "ai_topic": "Vocabulary",
+  "ai_mode": "off",
   "ai_grade_level": "Primary 3–6",
   "ai_difficulty": "easy",
-  "ai_model": "gpt-4o-mini",
+  "ai_model": "gpt-4.1-mini",
 
   "overlay_position": "top_right",
-  "overlay_margin_px": 40,
+  "overlay_margin_px": 20,
   "monitor_index": 0,
 
-  "auto_dismiss_after_answer_ms": 3000
+  "auto_dismiss_after_answer_ms": 1500,
+  "mouse_move_throttle_sec": 0.20
 }

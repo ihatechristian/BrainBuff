@@ -64,8 +64,22 @@ class QuestionEngine:
         ai_mode: str = "off",
         ai_model: str = "gpt-4.1-mini",
     ):
-        self.local_bank_path = local_bank_path
-        self.ai_cache_path = ai_cache_path
+        # Resolve paths relative to this file (project-safe),
+        # unless the user provided an absolute path.
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        self.local_bank_path = (
+            local_bank_path
+            if os.path.isabs(local_bank_path)
+            else os.path.join(base_dir, local_bank_path)
+        )
+
+        self.ai_cache_path = (
+            ai_cache_path
+            if os.path.isabs(ai_cache_path)
+            else os.path.join(base_dir, ai_cache_path)
+        )
+
         self.ai_mode = (ai_mode or "off").strip().lower()
         self.ai_model = ai_model
 
@@ -88,6 +102,23 @@ class QuestionEngine:
             self.ai_model = model
 
     # ---------- Local bank ----------
+    def _resolve_image_path(self, img: Optional[str]) -> Optional[str]:
+        if img is None:
+            return None
+        if not isinstance(img, str):
+            img = str(img)
+        img = img.strip()
+        if not img:
+            return None
+
+        # Already absolute → keep it
+        if os.path.isabs(img):
+            return img
+
+        # Resolve relative to the questions.json folder (NOT the current working directory)
+        bank_dir = os.path.dirname(os.path.abspath(self.local_bank_path))
+        return os.path.abspath(os.path.join(bank_dir, img))
+
     def load_local_bank(self) -> None:
         self._local_questions = []
         if not os.path.exists(self.local_bank_path):
@@ -302,7 +333,8 @@ class QuestionEngine:
             if not isinstance(choices, list):
                 choices = []
 
-            img = item.get("image", None)
+            img = self._resolve_image_path(item.get("image", None))
+
             if img is not None:
                 img = str(img).strip()
                 if not img:
@@ -317,6 +349,7 @@ class QuestionEngine:
                 explanation=str(item.get("explanation", "") or "").strip(),
                 image=img,
             )
+
         except Exception:
             return None
 
