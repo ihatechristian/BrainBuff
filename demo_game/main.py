@@ -436,6 +436,7 @@ def main():
     screen = pygame.display.set_mode((w, h), pygame.NOFRAME)
     S.WIDTH, S.HEIGHT = screen.get_size()
     print("Actual screen:", S.WIDTH, S.HEIGHT, "flags:", screen.get_flags())
+    print("flags:", screen.get_flags(), "size:", screen.get_size())
 
     if OVERLAY_AVAILABLE:
         overlay_thread = threading.Thread(target=start_overlay, daemon=True)
