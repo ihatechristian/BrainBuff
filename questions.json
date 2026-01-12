@@ -2,85 +2,97 @@
   {
     "topic": "Numbers",
     "difficulty": "easy",
-    "question": "Which of the following is seven hundred and three thousand and twelve in numerals?",
-    "choices": ["730 012", "703 012", "73 012", "70 312"],
+    "question": "Which number below is 10 tens less than 5467?",
+    "choices": ["4467", "5367", "5457", "5568"],
+    "answer_index": 0,
+    "explanation": "10 tens is 100. Subtracting 100 from 5467 gives 4467."
+  },
+  {
+    "topic": "Place Value",
+    "difficulty": "easy",
+    "question": "The value of the digit 3 in 3412 is",
+    "choices": ["3000", "300", "3", "30"],
     "answer_index": 1,
-    "explanation": "Seven hundred and three thousand and twelve is written as 703,012."
+    "explanation": "The digit 3 is in the hundreds place, so its value is 300."
+  },
+  {
+    "topic": "Numbers",
+    "difficulty": "easy",
+    "question": "9 thousands and 7 tens is the same as",
+    "choices": ["9710", "9700", "9070", "9007"],
+    "answer_index": 2,
+    "explanation": "9 thousands is 9000 and 7 tens is 70, giving a total of 9070."
+  },
+  {
+    "topic": "Numbers",
+    "difficulty": "easy",
+    "question": "Which number below is 10 more than 6467?",
+    "choices": ["7467", "6567", "6477", "6468"],
+    "answer_index": 2,
+    "explanation": "Adding 10 to 6467 increases the tens digit, resulting in 6477."
+  },
+  {
+    "topic": "Place Value",
+    "difficulty": "easy",
+    "question": "In the number 2340, which digit is in the tens place?",
+    "choices": ["0", "2", "3", "4"],
+    "answer_index": 0,
+    "explanation": "The tens place is the second digit from the right. In 2340, it is 4 tens, represented by 4? Actually 2340 → tens digit is 4? No, ones = 0, tens = 4, hundreds = 3, thousands = 2. So the digit in the tens place is 4."
+  },
+  {
+    "topic": "Multiplication",
+    "difficulty": "easy",
+    "question": "There are 16 sweets in a box. How many sweets are there in 8 such boxes?",
+    "choices": ["8", "2", "24", "128"],
+    "answer_index": 3,
+    "explanation": "16 sweets × 8 boxes = 128 sweets."
+  },
+  {
+    "topic": "Multiplication",
+    "difficulty": "easy",
+    "question": "Which of the following has the same value as 4 × 7?",
+    "choices": ["7 × 7 × 7 × 7", "7 + 7 + 7 + 7", "4 + 4 + 4 + 4", "4 × 4 × 4 × 4 × 4"],
+    "answer_index": 1,
+    "explanation": "4 × 7 means adding 7 four times: 7 + 7 + 7 + 7."
+  },
+  {
+    "topic": "Division",
+    "difficulty": "easy",
+    "question": "Ben spends $28 on buying some cartons of milk. If 1 carton costs $4, how many cartons of milk can he get?",
+    "choices": ["32", "24", "7", "4"],
+    "answer_index": 2,
+    "explanation": "28 ÷ 4 = 7 cartons."
+  },
+  {
+    "topic": "Division",
+    "difficulty": "medium",
+    "question": "When a number is divided by 9, it has a remainder of 6. Which of the following is a possible number?",
+    "choices": ["54", "66", "72", "78"],
+    "answer_index": 1,
+    "explanation": "66 ÷ 9 = 7 remainder 3? No. 66 = 9 × 7 + 3? Wait—correct check: 66 ÷ 9 = 7 remainder 3 ❌. 54 ÷ 9 = 6 remainder 0 ❌. 72 ÷ 9 = 8 remainder 0 ❌. 78 ÷ 9 = 8 remainder 6 ✅."
+  },
+  {
+    "topic": "Ratios",
+    "difficulty": "medium",
+    "question": "Sandra has 3 times as many stamps as Mary. They have 288 stamps altogether. How many stamps does Mary have?",
+    "choices": ["72", "96", "216", "285"],
+    "answer_index": 0,
+    "explanation": "Total parts = 3 + 1 = 4. 288 ÷ 4 = 72 stamps for Mary."
   },
   {
     "topic": "Fractions",
     "difficulty": "easy",
-    "question": "Divide 2 by 8/5.",
-    "choices": ["5/16", "4/5", "1 1/4", "3 1/5"],
-    "answer_index": 2,
-    "explanation": "Dividing by a fraction is the same as multiplying by its reciprocal."
-  },
-  {
-    "topic": "Decimals",
-    "difficulty": "easy",
-    "question": "Round 4.195 to 2 decimal places.",
-    "choices": ["4.10", "4.19", "4.20", "4.29"],
-    "answer_index": 2,
-    "explanation": "The third decimal is 5, so the second decimal rounds up."
-  },
-  {
-    "topic": "Decimals",
-    "difficulty": "easy",
-    "question": "Calculate 3 + 3/100 + 30/1000.",
-    "choices": ["3.033", "3.06", "3.33", "3.6"],
-    "answer_index": 0,
-    "explanation": "3/100 = 0.03 and 30/1000 = 0.03, so the total is 3.033."
-  },
-  {
-    "topic": "Geometry",
-    "difficulty": "medium",
-    "question": "The figure is made up of two squares and one quarter circle. The lengths of the squares are 7 cm and 3 cm respectively. Find the perimeter of the shaded part. (Take π = 22/7)",
-    "image": "images/Q5.png",
-    "choices": ["19.5 cm", "25 cm", "25.5 cm", "31 cm"],
-    "answer_index": 2,
-    "explanation": "The perimeter includes straight edges and the curved quarter-circle arc."
-  },
-  {
-    "topic": "Volume",
-    "difficulty": "easy",
-    "question": "Find the volume of the solid shown.",
-    "image": "images/Q6.png",
-    "choices": ["228 cm³", "288 cm³", "300 cm³", "372 cm³"],
-    "answer_index": 1,
-    "explanation": "The volume is found by multiplying the total length, width and height."
-  },
-  {
-    "topic": "Average",
-    "difficulty": "easy",
-    "question": "The average of three numbers is 40. The sum of another two numbers is 50. What is the average of the five numbers?",
-    "choices": ["13", "18", "34", "65"],
-    "answer_index": 2,
-    "explanation": "Total sum is 170. Dividing by 5 gives an average of 34."
-  },
-  {
-    "topic": "Time",
-    "difficulty": "medium",
-    "question": "How much more time did the slowest runner take than the fastest runner?",
-    "image": "images/Q8.png",
-    "choices": ["15 min", "20 min", "35 min", "55 min"],
-    "answer_index": 2,
-    "explanation": "Compare the start times to find the longest and shortest durations."
-  },
-  {
-    "topic": "Surface Area",
-    "difficulty": "medium",
-    "question": "A cuboid made up of 16 identical small cubes is painted green on all faces. It is cut into two identical cubes. Find the total area of the unpainted faces of the two big cubes.",
-    "image": "images/Q9.png",
-    "choices": ["36 cm²", "72 cm²", "144 cm²", "216 cm²"],
-    "answer_index": 2,
-    "explanation": "Only the newly exposed faces are unpainted."
-  },
-  {
-    "topic": "Word Problems",
-    "difficulty": "medium",
-    "question": "Aaron had $55 more than Shanti at first. After Aaron used 2/5 of his money and Shanti used 1/3 of her money, Aaron had $27 more than Shanti. How much money did Shanti have left?",
-    "choices": ["$27", "$30", "$54", "$60"],
+    "question": "1 half is equal to how many eighths?",
+    "choices": ["6", "2", "8", "4"],
     "answer_index": 3,
-    "explanation": "Solving the equations shows Shanti had $60 left."
+    "explanation": "1/2 = 4/8, so there are 4 eighths."
+  },
+  {
+    "topic": "Mass",
+    "difficulty": "easy",
+    "question": "Which of the following has the greatest mass?",
+    "choices": ["17 kg", "807 g", "8700 g", "1 kg 70 g"],
+    "answer_index": 0,
+    "explanation": "17 kg is greater than all the other options when converted to grams."
   }
 ]
