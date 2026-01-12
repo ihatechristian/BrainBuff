@@ -25,32 +25,45 @@ class Enemy:
             self.radius = 16
             self.exp_value = 10
 
-        # Scale with difficulty (time-based ramp)
-        # difficulty ~ increases slowly; we scale hp & speed modestly
+        # Scale with difficulty
         self.max_hp = base_hp * (1.0 + 0.65 * difficulty)
         self.hp = self.max_hp
         self.speed = base_speed * (1.0 + 0.35 * difficulty)
 
         self.alive = True
 
+        # 🔥 Hit flash timer (seconds)
+        self.hit_flash = 0.0
+
     def take_damage(self, dmg: float) -> bool:
         self.hp -= dmg
+        self.hit_flash = 0.08  # flash duration (seconds)
+
         if self.hp <= 0:
             self.alive = False
             return True
         return False
 
     def update(self, dt: float, player_pos: Vector2):
+        # Update hit flash
+        if self.hit_flash > 0:
+            self.hit_flash -= dt
+
+        # Move toward player
         to_player = (player_pos - self.pos)
         if to_player.length_squared() > 0:
             dir_vec = to_player.normalize()
         else:
             dir_vec = Vector2(1, 0)
+
         self.pos += dir_vec * self.speed * dt
 
     def draw(self, surf: pygame.Surface, camera: Vector2):
         p = self.pos - camera
-        pygame.draw.circle(surf, self.color, (int(p.x), int(p.y)), self.radius)
+
+        # ⚡ Flash white when hit
+        draw_color = (255, 255, 255) if self.hit_flash > 0 else self.color
+        pygame.draw.circle(surf, draw_color, (int(p.x), int(p.y)), self.radius)
 
         # HP mini-bar
         w = 26
@@ -58,8 +71,13 @@ class Enemy:
         ratio = max(0.0, self.hp / max(1e-6, self.max_hp))
         x = int(p.x - w / 2)
         y = int(p.y - self.radius - 10)
+
         pygame.draw.rect(surf, (30, 30, 30), (x, y, w, h))
-        pygame.draw.rect(surf, (80, 220, 110), (x, y, int(w * ratio), h))
+        pygame.draw.rect(
+            surf,
+            (80, 220, 110),
+            (x, y, int(w * ratio), h)
+        )
 
 
 def spawn_enemy_at_screen_edge(player_pos: Vector2, camera: Vector2, difficulty: float) -> Enemy:
