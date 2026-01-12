@@ -2,6 +2,21 @@
 from __future__ import annotations
 import math
 import random
+import os
+import ctypes
+
+# Make pygame/SDL use physical pixels (fixes "small top-left" on Windows scaling)
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)  # per-monitor DPI aware
+except Exception:
+    try:
+        ctypes.windll.user32.SetProcessDPIAware()
+    except Exception:
+        pass
+
+# Force window top-left (must be set before pygame.init)
+os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0"
+
 import pygame
 from pygame import Vector2
 import threading
@@ -14,16 +29,9 @@ from weapons import WeaponSystem
 from upgrades import UpgradeManager
 
 # Import overlay functionality from parent directory
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import subprocess
+from pathlib import Path
 
-try:
-    from overlay_trigger import BrainBuffApp, load_settings
-    from PySide6 import QtWidgets
-    OVERLAY_AVAILABLE = True
-except ImportError:
-    OVERLAY_AVAILABLE = False
 
 
 class ExpOrb:
@@ -422,27 +430,45 @@ def start_overlay():
     except Exception as e:
         print(f"Overlay error: {e}")
 
+def start_overlay_process():
+    # game/main.py is inside a folder, overlay_trigger.py is in the parent project root
+    project_root = Path(__file__).resolve().parents[1]
+    overlay_script = project_root / "overlay_trigger.py"
+
+    if not overlay_script.exists():
+        print("overlay_trigger.py not found at:", overlay_script)
+        return None
+
+    try:
+        proc = subprocess.Popen(
+            [sys.executable, str(overlay_script)],
+            cwd=str(project_root),
+        )
+        print("BrainBuff overlay started:", overlay_script)
+        return proc
+    except Exception as e:
+        print("Failed to start overlay:", e)
+        return None
+
 
 def main():
-    import os
-    os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0"  # must be set before pygame.init()
-
     pygame.init()
     pygame.display.set_caption(S.TITLE)
 
     info = pygame.display.Info()
-    w, h = info.current_w, info.current_h
-
-    screen = pygame.display.set_mode((w, h), pygame.NOFRAME)
+    screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.NOFRAME)
     S.WIDTH, S.HEIGHT = screen.get_size()
-    print("Actual screen:", S.WIDTH, S.HEIGHT, "flags:", screen.get_flags())
-    print("flags:", screen.get_flags(), "size:", screen.get_size())
 
-    if OVERLAY_AVAILABLE:
-        overlay_thread = threading.Thread(target=start_overlay, daemon=True)
-        overlay_thread.start()
+    overlay_proc = start_overlay_process()  # <-- starts overlay_trigger.py
 
-    Game(screen).run()
+    try:
+        Game(screen).run()
+    finally:
+        # Optional: close overlay when game exits
+        if overlay_proc is not None:
+            overlay_proc.terminate()
+
+
 
 
 

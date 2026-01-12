@@ -13,6 +13,8 @@ from pynput import keyboard, mouse
 
 from overlay_ui import OverlayWindow
 from question_engine import QuestionEngine
+import ctypes
+
 
 
 # -------------------- Settings --------------------
@@ -137,6 +139,28 @@ class BrainBuffApp(QtCore.QObject):
 
         # Initial placement
         self._place_overlay()
+
+    def _force_topmost_no_activate(self):
+        """Force overlay above borderless game windows on Windows (no focus steal)."""
+        if not sys.platform.startswith("win"):
+            return
+        try:
+            hwnd = int(self.overlay.winId())
+            user32 = ctypes.windll.user32
+
+            HWND_TOPMOST = -1
+            SWP_NOSIZE = 0x0001
+            SWP_NOMOVE = 0x0002
+            SWP_NOACTIVATE = 0x0010
+            SWP_SHOWWINDOW = 0x0040
+
+            user32.SetWindowPos(
+                hwnd, HWND_TOPMOST,
+                0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW
+            )
+        except Exception:
+            pass
 
     # ---------- Global input ----------
     def _start_global_listeners(self):
@@ -296,7 +320,6 @@ class BrainBuffApp(QtCore.QObject):
 
         self.engine.set_ai_mode(self.settings.ai_mode, self.settings.ai_model)
 
-        # You can replace with your PSLE topics
         topics = ["Mathematics", "Decimals", "Fractions", "Geometry"]
         topic = random.choice(topics)
 
@@ -322,8 +345,15 @@ class BrainBuffApp(QtCore.QObject):
         self.last_popup_time = now
         self.popups_history.append(now)
 
+        # Show overlay and force TOPMOST (helps over borderless pygame windows)
         self.overlay.show()
         self.overlay.raise_()
+
+        # Force above borderless game without stealing focus
+        if hasattr(self, "_force_topmost_no_activate"):
+            self._force_topmost_no_activate()
+            QtCore.QTimer.singleShot(50, self._force_topmost_no_activate)
+
         self.overlay_visible = True
         self.overlay_shown_at = now
 
