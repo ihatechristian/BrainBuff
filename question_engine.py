@@ -64,8 +64,22 @@ class QuestionEngine:
         ai_mode: str = "off",
         ai_model: str = "gpt-4.1-mini",
     ):
-        self.local_bank_path = local_bank_path
-        self.ai_cache_path = ai_cache_path
+        # Resolve paths relative to this file (project-safe),
+        # unless the user provided an absolute path.
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        self.local_bank_path = (
+            local_bank_path
+            if os.path.isabs(local_bank_path)
+            else os.path.join(base_dir, local_bank_path)
+        )
+
+        self.ai_cache_path = (
+            ai_cache_path
+            if os.path.isabs(ai_cache_path)
+            else os.path.join(base_dir, ai_cache_path)
+        )
+
         self.ai_mode = (ai_mode or "off").strip().lower()
         self.ai_model = ai_model
 
