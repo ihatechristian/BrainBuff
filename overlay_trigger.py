@@ -6,7 +6,7 @@ import sys
 import time
 from collections import deque
 from dataclasses import asdict, dataclass
-from typing import Deque
+from typing import Deque, Optional, Set
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from pynput import keyboard, mouse
@@ -19,15 +19,17 @@ from question_engine import QuestionEngine
 
 @dataclass
 class Settings:
-    activity_window_sec: int = 8
-    low_activity_threshold: int = 6
-    high_activity_spike_threshold: int = 14
+    # Activity monitoring
+    activity_window_sec: int = 8               # rolling window size (seconds)
+    low_activity_threshold: int = 6            # show quiz when count <= this
+    high_activity_spike_threshold: int = 14    # hide overlay when count >= this
 
-    cooldown_sec: int = 45
-    snooze_minutes: int = 10
-    max_popups_per_hour: int = 20
+    # Rate limiting
+    cooldown_sec: int = 45                     # minimum time between popups
+    snooze_minutes: int = 10                   # F9 snooze duration
+    max_popups_per_hour: int = 20              # hard cap per hour
 
-    # AI mode:
+    # AI mode (token-safe)
     # off   -> local only
     # cache -> cached AI only (NO tokens)
     # live  -> cached first, else API (tokens)
@@ -36,11 +38,16 @@ class Settings:
     ai_difficulty: str = "easy"
     ai_model: str = "gpt-4.1-mini"
 
-    overlay_position: str = "center"  # center | top_right
+    # Overlay placement
+    overlay_position: str = "center"           # center | top_right
     overlay_margin_px: int = 40
     monitor_index: int = 0
 
+    # Feedback / UX
     auto_dismiss_after_answer_ms: int = 1200
+
+    # Mouse activity sampling (prevents huge counts)
+    mouse_move_throttle_sec: float = 0.12      # ~8 moves/sec
 
 
 def load_settings(path: str = "settings.json") -> Settings:
@@ -65,6 +72,16 @@ def save_settings(settings: Settings, path: str = "settings.json") -> None:
             json.dump(asdict(settings), f, ensure_ascii=False, indent=2)
     except Exception:
         pass
+
+
+def ensure_settings_file(path: str = "settings.json") -> Settings:
+    """
+    Loads settings.json if present, otherwise writes defaults and returns them.
+    """
+    s = load_settings(path)
+    if not os.path.exists(path):
+        save_settings(s, path)
+    return s
 
 
 # -------------------- App Controller --------------------
@@ -97,7 +114,11 @@ class BrainBuffApp(QtCore.QObject):
         self.popups_history: Deque[float] = deque()
 
         self.overlay_visible = False
-        self.overlay_shown_at: float = 0.0  # grace period
+        self.overlay_shown_at: float = 0.0  # grace period start time
+
+        # Input filters
+        self._last_move_time = 0.0
+        self._keys_down: Set[object] = set()  # to ignore key-repeat
 
         # Connect signals
         self.sig_activity.connect(self._record_input)
@@ -111,22 +132,20 @@ class BrainBuffApp(QtCore.QObject):
         self.tick.timeout.connect(self._update_logic)
         self.tick.start()
 
-        self._last_move_time = 0.0
-        self._move_throttle_sec = 0.12  # ~8 moves/sec
-
         # Global listeners
         self._start_global_listeners()
 
+        # Initial placement
         self._place_overlay()
-
-
 
     # ---------- Global input ----------
     def _start_global_listeners(self):
-        self.k_listener = keyboard.Listener(on_press=self._on_key_press)
+        # Keyboard: include on_release so we can ignore auto-repeat
+        self.k_listener = keyboard.Listener(on_press=self._on_key_press, on_release=self._on_key_release)
         self.k_listener.daemon = True
         self.k_listener.start()
 
+        # Mouse
         self.m_listener = mouse.Listener(
             on_move=self._on_mouse_move,
             on_click=self._on_mouse_click,
@@ -136,25 +155,27 @@ class BrainBuffApp(QtCore.QObject):
         self.m_listener.start()
 
     def _record_input(self):
-        # Keep recording even while overlay is visible (so spike-hide works)
+        # Keep recording even while overlay is visible (spike-hide depends on it)
         self.input_times.append(time.time())
 
     def _on_mouse_move(self, x, y):
-        if self._point_over_overlay(x, y):
+        if self._point_over_overlay():
             return
+
         now = time.time()
-        if now - self._last_move_time < self._move_throttle_sec:
+        if (now - self._last_move_time) < float(self.settings.mouse_move_throttle_sec):
             return
         self._last_move_time = now
         self.sig_activity.emit()
 
     def _on_mouse_click(self, x, y, button, pressed):
-        # Ignore clicks meant for answering
-        if self._point_over_overlay(x, y):
+        if self._point_over_overlay():
             return
         self.sig_activity.emit()
 
     def _on_mouse_scroll(self, x, y, dx, dy):
+        if self._point_over_overlay():
+            return
         self.sig_activity.emit()
 
     def _on_key_press(self, key):
@@ -172,7 +193,15 @@ class BrainBuffApp(QtCore.QObject):
         except Exception:
             pass
 
+        # Ignore key-repeat: only count first press until release
+        if key in self._keys_down:
+            return
+        self._keys_down.add(key)
+
         self.sig_activity.emit()
+
+    def _on_key_release(self, key):
+        self._keys_down.discard(key)
 
     # ---------- Rules ----------
     def _cleanup_old_inputs(self, now: float):
@@ -184,6 +213,8 @@ class BrainBuffApp(QtCore.QObject):
         return len(self.input_times)
 
     def _cooldown_ok(self, now: float) -> bool:
+        if self.last_popup_time <= 0:
+            return True
         return (now - self.last_popup_time) >= float(self.settings.cooldown_sec)
 
     def _snooze_ok(self, now: float) -> bool:
@@ -196,15 +227,13 @@ class BrainBuffApp(QtCore.QObject):
         return len(self.popups_history) < int(self.settings.max_popups_per_hour)
 
     def _update_logic(self):
-
         now = time.time()
         self._cleanup_old_inputs(now)
         count = self._inputs_in_window()
 
-        # If visible and user resumes heavy activity, hide (after grace period)
+        # If visible: hide only on spikes (after grace), BUT never hide if cursor is over overlay
         if self.overlay_visible:
-            # If the cursor is over the overlay, never hide it due to activity spikes.
-            if self.overlay.frameGeometry().contains(QtGui.QCursor.pos()):
+            if self._point_over_overlay():
                 return
 
             if (now - self.overlay_shown_at) >= 2.0:
@@ -212,15 +241,17 @@ class BrainBuffApp(QtCore.QObject):
                     self.hide_overlay()
             return
 
+        # Not visible: show on low activity + rate limits
         low_activity = count <= int(self.settings.low_activity_threshold)
         if low_activity and self._cooldown_ok(now) and self._snooze_ok(now) and self._max_per_hour_ok(now):
             self.show_question()
 
-        if now % 2 < 0.2:  # roughly every ~2s
+        # Debug print (every ~2s)
+        if now % 2 < 0.2:
             dt = now - self.last_popup_time
             print(
                 "count=", count,
-                "low=", (count <= self.settings.low_activity_threshold),
+                "low=", low_activity,
                 "cooldown=", self._cooldown_ok(now),
                 "dt=", round(dt, 3),
                 "snooze=", self._snooze_ok(now),
@@ -228,17 +259,11 @@ class BrainBuffApp(QtCore.QObject):
                 "visible=", self.overlay_visible
             )
 
-    def _point_over_overlay(self, x: int, y: int) -> bool:
-        # Use Qt cursor coordinates to avoid DPI scaling mismatch with pynput.
+    def _point_over_overlay(self) -> bool:
+        # DPI-safe: use Qt cursor global coordinates
         if not self.overlay_visible or not self.overlay.isVisible():
             return False
-        pos = QtGui.QCursor.pos()  # global position in Qt coords
-        return self.overlay.frameGeometry().contains(pos)
-
-    def _on_mouse_scroll(self, x, y, dx, dy):
-        if self._point_over_overlay(x, y):
-            return
-        self.sig_activity.emit()
+        return self.overlay.frameGeometry().contains(QtGui.QCursor.pos())
 
     def _place_overlay(self):
         screens = QtGui.QGuiApplication.screens()
@@ -252,8 +277,7 @@ class BrainBuffApp(QtCore.QObject):
         screen = screens[mi]
         geo = screen.availableGeometry()
 
-        # DO NOT force size here. Let overlay_ui auto-size for images.
-        # Just use current size after set_question() has run.
+        # DO NOT force size here; overlay_ui may auto-resize for images.
         w = self.overlay.width()
         h = self.overlay.height()
 
@@ -272,7 +296,8 @@ class BrainBuffApp(QtCore.QObject):
 
         self.engine.set_ai_mode(self.settings.ai_mode, self.settings.ai_model)
 
-        topics = ["Mathematics", "Science", "English", "History", "Geography", "General Knowledge"]
+        # You can replace with your PSLE topics
+        topics = ["Mathematics", "Decimals", "Fractions", "Geometry"]
         topic = random.choice(topics)
 
         q = self.engine.get_question(
@@ -308,13 +333,12 @@ class BrainBuffApp(QtCore.QObject):
 
         q = self.overlay.current_question
         correct = (idx == q.answer_index)
-        self.overlay.show_feedback(correct, q.explanation or "")
 
+        self.overlay.show_feedback(correct, q.explanation or "")
         QtCore.QTimer.singleShot(int(self.settings.auto_dismiss_after_answer_ms), self.hide_overlay)
 
     def hide_overlay(self):
         print("HIDE OVERLAY", time.time())
-
         if self.overlay_visible:
             self.overlay.hide()
             self.overlay_visible = False
@@ -339,7 +363,7 @@ class BrainBuffApp(QtCore.QObject):
         if self.overlay_visible:
             self.overlay.hint.setText(msg)
         else:
-            self._place_overlay()
+            # Quick toast-like overlay message
             self.overlay.title.setText("BrainBuff")
             self.overlay.meta.setText("")
             self.overlay.question_label.setText("")
@@ -354,12 +378,17 @@ class BrainBuffApp(QtCore.QObject):
 
 
 def main():
-    settings = load_settings("settings.json")
+    settings = ensure_settings_file("settings.json")
+
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("BrainBuff")
 
     _controller = BrainBuffApp(settings)
-    sys.exit(app.exec())
+
+    try:
+        sys.exit(app.exec())
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
