@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 # Window
-WIDTH = 1100
-HEIGHT = 650
+WIDTH = 1280
+HEIGHT = 720
 FPS = 120
 TITLE = "Survivor.io-style (pygame) - BrainBuff testbed"
 

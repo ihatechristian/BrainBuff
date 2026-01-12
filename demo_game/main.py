@@ -424,17 +424,26 @@ def start_overlay():
 
 
 def main():
+    import os
+    os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0"  # must be set before pygame.init()
+
     pygame.init()
     pygame.display.set_caption(S.TITLE)
-    screen = pygame.display.set_mode((S.WIDTH, S.HEIGHT))
-    
-    # Start overlay in background thread
+
+    info = pygame.display.Info()
+    w, h = info.current_w, info.current_h
+
+    screen = pygame.display.set_mode((w, h), pygame.NOFRAME)
+    S.WIDTH, S.HEIGHT = screen.get_size()
+    print("Actual screen:", S.WIDTH, S.HEIGHT, "flags:", screen.get_flags())
+
     if OVERLAY_AVAILABLE:
         overlay_thread = threading.Thread(target=start_overlay, daemon=True)
         overlay_thread.start()
-        print("BrainBuff overlay started in background")
-    
+
     Game(screen).run()
+
+
 
 
 if __name__ == "__main__":
