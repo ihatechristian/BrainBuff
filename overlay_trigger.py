@@ -35,6 +35,8 @@ class Settings:
     # off   -> local only
     # cache -> cached AI only (NO tokens)
     # live  -> cached first, else API (tokens)
+    cluster_mode: str = "off"  # off | adaptive
+
     ai_mode: str = "off"
     ai_grade_level: str = "Primary 3–6"
     ai_difficulty: str = "easy"
@@ -104,6 +106,7 @@ class BrainBuffApp(QtCore.QObject):
             ai_cache_path="ai_cache.jsonl",
             ai_mode=settings.ai_mode,
             ai_model=settings.ai_model,
+            cluster_mode=settings.cluster_mode,  # <-- ADD THIS
         )
 
         self.overlay = OverlayWindow(on_answer=self.answer)
@@ -322,6 +325,7 @@ class BrainBuffApp(QtCore.QObject):
 
         topics = ["Mathematics", "Decimals", "Fractions", "Geometry"]
         topic = random.choice(topics)
+        self.engine.set_cluster_mode(self.settings.cluster_mode)
 
         q = self.engine.get_question(
             topic=topic,
@@ -363,6 +367,8 @@ class BrainBuffApp(QtCore.QObject):
 
         q = self.overlay.current_question
         correct = (idx == q.answer_index)
+        if hasattr(self.engine, "record_answer"):
+            self.engine.record_answer(q, correct)
 
         self.overlay.show_feedback(correct, q.explanation or "")
         QtCore.QTimer.singleShot(int(self.settings.auto_dismiss_after_answer_ms), self.hide_overlay)

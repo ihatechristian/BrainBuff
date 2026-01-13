@@ -14,7 +14,11 @@ class Question:
     choices: List[str]  # exactly 4
     answer_index: int  # 0..3
     explanation: str = ""
-    image: Optional[str] = None  # <-- NEW: path like "images/Q5.png"
+    image: Optional[str] = None
+
+    # --- NEW: cluster metadata loaded from questions.json ---
+    cluster_id: Optional[int] = None
+    question_cluster: Optional[str] = None  # human-readable label
 
     def is_valid(self) -> Tuple[bool, str]:
         if not isinstance(self.question, str) or not self.question.strip():
@@ -39,8 +43,16 @@ class Question:
             if not isinstance(self.image, str):
                 return False, "image must be string or null"
             if not self.image.strip():
-                # treat empty string as None
                 self.image = None
+
+        # cluster fields optional; validate types if provided
+        if self.cluster_id is not None and not isinstance(self.cluster_id, int):
+            try:
+                self.cluster_id = int(self.cluster_id)
+            except Exception:
+                self.cluster_id = None
+        if self.question_cluster is not None and not isinstance(self.question_cluster, str):
+            self.question_cluster = str(self.question_cluster)
 
         return True, "ok"
 
@@ -55,6 +67,11 @@ class QuestionEngine:
       - "off"   -> local only
       - "cache" -> cached AI only (NO API calls ever)
       - "live"  -> cached AI first, else generate via API and cache (uses tokens)
+
+    cluster_mode (NEW):
+      - "off"        -> ignore clusters (random local selection)
+      - "adaptive"   -> if last answer was wrong, prefer same-cluster next;
+                        if last answer was correct, prefer different-cluster next
     """
 
     def __init__(
@@ -63,9 +80,8 @@ class QuestionEngine:
         ai_cache_path: str = "ai_cache.jsonl",
         ai_mode: str = "off",
         ai_model: str = "gpt-4.1-mini",
+        cluster_mode: str = "off",  # off | adaptive
     ):
-        # Resolve paths relative to this file (project-safe),
-        # unless the user provided an absolute path.
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
         self.local_bank_path = (
@@ -73,7 +89,6 @@ class QuestionEngine:
             if os.path.isabs(local_bank_path)
             else os.path.join(base_dir, local_bank_path)
         )
-
         self.ai_cache_path = (
             ai_cache_path
             if os.path.isabs(ai_cache_path)
@@ -83,15 +98,30 @@ class QuestionEngine:
         self.ai_mode = (ai_mode or "off").strip().lower()
         self.ai_model = ai_model
 
+        self.cluster_mode = (cluster_mode or "off").strip().lower()
+        if self.cluster_mode not in ("off", "adaptive"):
+            self.cluster_mode = "off"
+
         self._local_questions: List[Question] = []
         self._ai_cache: List[Question] = []
         self._ai_cache_index: Dict[str, List[int]] = {}  # key -> indices
 
+        # NEW: local cluster index
+        self._cluster_index: Dict[str, List[int]] = {}   # cluster_key -> indices in _local_questions
+        self._has_clusters: bool = False
+
+        # NEW: adaptive routing state
+        self._last_cluster_key: Optional[str] = None
+        self._prefer_same_cluster_next: Optional[bool] = None  # True/False set after answering
+
         # Debug/info for UI
         self.last_source: str = "local"  # cache|live|local|fallback
+        self.last_pick_reason: str = "random"  # random|same_cluster|different_cluster|no_cluster|fallback
 
         self.load_local_bank()
         self.load_ai_cache()
+
+    # -------------------- Public controls --------------------
 
     def set_ai_mode(self, mode: str, model: Optional[str] = None):
         mode = (mode or "off").strip().lower()
@@ -101,7 +131,24 @@ class QuestionEngine:
         if model:
             self.ai_model = model
 
-    # ---------- Local bank ----------
+    def set_cluster_mode(self, mode: str):
+        mode = (mode or "off").strip().lower()
+        if mode not in ("off", "adaptive"):
+            mode = "off"
+        self.cluster_mode = mode
+
+    def record_answer(self, question: Question, correct: bool) -> None:
+        """
+        Call this after a user answers a question so the engine can adapt next selection.
+        If correct -> prefer different cluster next.
+        If wrong   -> prefer same cluster next.
+        """
+        ck = self._cluster_key_from_question(question)
+        self._last_cluster_key = ck
+        self._prefer_same_cluster_next = (not correct)
+
+    # -------------------- Local bank --------------------
+
     def _resolve_image_path(self, img: Optional[str]) -> Optional[str]:
         if img is None:
             return None
@@ -110,39 +157,112 @@ class QuestionEngine:
         img = img.strip()
         if not img:
             return None
-
-        # Already absolute → keep it
         if os.path.isabs(img):
             return img
-
-        # Resolve relative to the questions.json folder (NOT the current working directory)
         bank_dir = os.path.dirname(os.path.abspath(self.local_bank_path))
         return os.path.abspath(os.path.join(bank_dir, img))
+
+    def _cluster_key_from_question(self, q: Question) -> Optional[str]:
+        """
+        Prefer cluster_id if present; else use question_cluster; else None.
+        """
+        if q.cluster_id is not None:
+            return f"id:{int(q.cluster_id)}"
+        if q.question_cluster:
+            return f"label:{q.question_cluster.strip().lower()}"
+        return None
+
+    def _rebuild_cluster_index(self):
+        self._cluster_index = {}
+        self._has_clusters = False
+        for i, q in enumerate(self._local_questions):
+            ck = self._cluster_key_from_question(q)
+            if ck:
+                self._cluster_index.setdefault(ck, []).append(i)
+                self._has_clusters = True
 
     def load_local_bank(self) -> None:
         self._local_questions = []
         if not os.path.exists(self.local_bank_path):
+            self._rebuild_cluster_index()
             return
+
         try:
             with open(self.local_bank_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             if not isinstance(data, list):
+                self._rebuild_cluster_index()
                 return
+
             for item in data:
                 q = self._question_from_dict(item)
                 if q:
                     ok, _ = q.is_valid()
                     if ok:
                         self._local_questions.append(q)
+
         except Exception:
             self._local_questions = []
 
-    def get_local_question(self) -> Optional[Question]:
+        self._rebuild_cluster_index()
+
+    def _choose_local_question_adaptive(self) -> Optional[Question]:
+        """
+        Adaptive rule:
+          - If last answer wrong -> same cluster preferred
+          - If last answer correct -> different cluster preferred
+        Falls back to random if no clusters / no last cluster / not enough variety.
+        """
         if not self._local_questions:
             return None
+
+        if self.cluster_mode != "adaptive" or not self._has_clusters:
+            self.last_pick_reason = "no_cluster" if not self._has_clusters else "random"
+            return random.choice(self._local_questions)
+
+        # No previous cluster info yet => random
+        if not self._last_cluster_key or self._prefer_same_cluster_next is None:
+            self.last_pick_reason = "random"
+            return random.choice(self._local_questions)
+
+        want_same = bool(self._prefer_same_cluster_next)
+        last_ck = self._last_cluster_key
+
+        if want_same:
+            inds = self._cluster_index.get(last_ck, [])
+            if inds:
+                self.last_pick_reason = "same_cluster"
+                return self._local_questions[random.choice(inds)]
+            # If cluster missing, fall back
+            self.last_pick_reason = "fallback"
+            return random.choice(self._local_questions)
+
+        # want different
+        # Choose a different cluster key (if possible)
+        keys = list(self._cluster_index.keys())
+        if len(keys) <= 1:
+            self.last_pick_reason = "fallback"
+            return random.choice(self._local_questions)
+
+        other_keys = [k for k in keys if k != last_ck]
+        if not other_keys:
+            self.last_pick_reason = "fallback"
+            return random.choice(self._local_questions)
+
+        pick_ck = random.choice(other_keys)
+        inds = self._cluster_index.get(pick_ck, [])
+        if inds:
+            self.last_pick_reason = "different_cluster"
+            return self._local_questions[random.choice(inds)]
+
+        self.last_pick_reason = "fallback"
         return random.choice(self._local_questions)
 
-    # ---------- AI cache ----------
+    def get_local_question(self) -> Optional[Question]:
+        return self._choose_local_question_adaptive()
+
+    # -------------------- AI cache --------------------
+
     def load_ai_cache(self) -> None:
         self._ai_cache = []
         self._ai_cache_index = {}
@@ -189,28 +309,27 @@ class QuestionEngine:
             return None
         return self._ai_cache[random.choice(indices)]
 
-    # ---------- Public API ----------
+    # -------------------- Public API --------------------
+
     def get_question(self, topic: str, grade_level: str, difficulty: str) -> Question:
         """
-        ai_mode == "off":
-            local -> fallback
+        AI selection:
+          cache/live -> AI cached/live
+          else -> local
 
-        ai_mode == "cache":
-            cached AI (NO API) -> local -> fallback
-
-        ai_mode == "live":
-            cached AI -> API generate -> local -> fallback
+        Cluster mode currently applies to LOCAL selection only (safe + predictable).
+        (You can extend to AI cache later.)
         """
         mode = (self.ai_mode or "off").strip().lower()
 
-        # 1) Cache (NO TOKENS)
+        # 1) AI Cache (NO TOKENS)
         if mode in ("cache", "live"):
             cached = self.get_cached_ai_question(topic, difficulty)
             if cached:
                 self.last_source = "cache"
                 return cached
 
-        # 2) Live generation (TOKENS) only if explicitly allowed
+        # 2) AI Live (TOKENS) only if allowed
         if mode == "live" and os.getenv("OPENAI_API_KEY"):
             generated = self._generate_ai_question(topic, grade_level, difficulty)
             if generated:
@@ -218,7 +337,7 @@ class QuestionEngine:
                 self.last_source = "live"
                 return generated
 
-        # 3) Local fallback
+        # 3) Local (cluster-aware if enabled)
         local = self.get_local_question()
         if local:
             self.last_source = "local"
@@ -234,20 +353,19 @@ class QuestionEngine:
             answer_index=1,
             explanation="9 is the largest among the options.",
             image=None,
+            cluster_id=None,
+            question_cluster=None,
         )
 
-    # ---------- OpenAI (only used in ai_mode == 'live') ----------
+    # -------------------- OpenAI (live mode only) --------------------
+
     def _generate_ai_question(self, topic: str, grade_level: str, difficulty: str) -> Optional[Question]:
-        """
-        Uses Chat Completions via requests.
-        Returns STRICT JSON (no markdown). Validates schema + guardrails.
-        """
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             return None
 
         try:
-            import requests  # lazy import so you don't need requests unless you use live mode
+            import requests
         except Exception:
             return None
 
@@ -301,15 +419,12 @@ class QuestionEngine:
                 return None
 
             text = data["choices"][0]["message"]["content"].strip()
-
-            # Must be JSON only
             obj = json.loads(text)
 
             q = self._question_from_dict(obj)
             if not q:
                 return None
 
-            # Guardrails
             if len(q.choices) != 4:
                 return None
             if not (0 <= q.answer_index <= 3):
@@ -324,7 +439,8 @@ class QuestionEngine:
         except Exception:
             return None
 
-    # ---------- Helpers ----------
+    # -------------------- Helpers --------------------
+
     def _question_from_dict(self, item: Dict[str, Any]) -> Optional[Question]:
         if not isinstance(item, dict):
             return None
@@ -335,10 +451,17 @@ class QuestionEngine:
 
             img = self._resolve_image_path(item.get("image", None))
 
-            if img is not None:
-                img = str(img).strip()
-                if not img:
-                    img = None
+            # cluster fields (optional)
+            cid = item.get("cluster_id", None)
+            if cid is not None:
+                try:
+                    cid = int(cid)
+                except Exception:
+                    cid = None
+
+            clabel = item.get("question_cluster", None)
+            if clabel is not None:
+                clabel = str(clabel).strip() or None
 
             return Question(
                 topic=str(item.get("topic", "")).strip(),
@@ -348,8 +471,9 @@ class QuestionEngine:
                 answer_index=int(item.get("answer_index", -1)),
                 explanation=str(item.get("explanation", "") or "").strip(),
                 image=img,
+                cluster_id=cid,
+                question_cluster=clabel,
             )
-
         except Exception:
             return None
 

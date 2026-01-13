@@ -12,6 +12,9 @@
   "ai_difficulty": "easy",
   "ai_model": "gpt-4.1-mini",
 
+  "cluster_mode": "adaptive", //adaptive or off
+
+
   "overlay_position": "top_right",
   "overlay_margin_px": 20,
   "monitor_index": 0,
