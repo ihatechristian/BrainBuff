@@ -102,7 +102,7 @@ class BrainBuffApp(QtCore.QObject):
         self.settings = settings
 
         self.engine = QuestionEngine(
-            local_bank_path="questions.json",
+            local_bank_path="questions_with_clusters.json",
             ai_cache_path="ai_cache.jsonl",
             ai_mode=settings.ai_mode,
             ai_model=settings.ai_model,

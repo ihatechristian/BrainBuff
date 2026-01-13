@@ -76,7 +76,7 @@ class QuestionEngine:
 
     def __init__(
         self,
-        local_bank_path: str = "questions.json",
+        local_bank_path: str = "questions_with_clusters.json",
         ai_cache_path: str = "ai_cache.jsonl",
         ai_mode: str = "off",
         ai_model: str = "gpt-4.1-mini",
