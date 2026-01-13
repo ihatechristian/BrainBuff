@@ -3,3 +3,6 @@ pynput>=1.7.0
 requests>=2.25.0
 python-dotenv>=0.19.0
 pygame>=2.5.0
+scikit-learn==1.5.2
+numpy>=1.23
+scipy>=1.10
