@@ -30,6 +30,8 @@ class OverlayWindow(QtWidgets.QWidget):
 
     No scroll. The image is always scaled to fit (KeepAspectRatio) so the full diagram is visible.
     The window also auto-resizes (within screen limits) when an image is present.
+
+    Theme: Calm education overlay palette (dark slate + blue accent)
     """
 
     def __init__(self, on_answer: Optional[Callable[[int], None]] = None):
@@ -39,6 +41,33 @@ class OverlayWindow(QtWidgets.QWidget):
 
         # Store the original pixmap for clean rescaling on resize
         self._diagram_pixmap: Optional[QtGui.QPixmap] = None
+
+        # Track current feedback state for button styling
+        self._feedback_active = False
+        self._correct_index: Optional[int] = None
+
+        # ---- Theme tokens (education overlay) ----
+        # Background
+        self.CARD_BG = "rgba(17, 24, 39, 235)"         # #111827 with alpha
+        self.CARD_BORDER = "rgba(255, 255, 255, 36)"
+        self.DIAGRAM_BG = "rgba(255, 255, 255, 10)"
+        self.DIAGRAM_BORDER = "rgba(255, 255, 255, 22)"
+
+        # Text
+        self.TEXT_MAIN = "#F9FAFB"                     # soft white
+        self.TEXT_SUB = "rgba(156, 163, 175, 220)"     # #9CA3AF
+        self.TEXT_HINT = "rgba(156, 163, 175, 200)"
+
+        # Accents
+        self.ACCENT = "#3B82F6"                        # blue
+        self.BUTTON_BG = "rgba(31, 41, 55, 210)"       # #1F2937-ish
+        self.BUTTON_HOVER = "rgba(55, 65, 81, 220)"    # #374151-ish
+        self.BUTTON_BORDER = "rgba(255, 255, 255, 18)"
+
+        # Feedback colors
+        self.GOOD = "#22C55E"                          # green
+        self.BAD = "#F87171"                           # soft red
+        self.WARN = "#FBBF24"                          # amber
 
         self.setWindowFlags(
             QtCore.Qt.FramelessWindowHint
@@ -81,6 +110,7 @@ class OverlayWindow(QtWidgets.QWidget):
         for i in range(4):
             btn = QtWidgets.QPushButton("")
             btn.setObjectName("choice")
+            btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
             btn.clicked.connect(lambda checked=False, idx=i: self._choice_clicked(idx))
             self.choice_buttons.append(btn)
 
@@ -113,50 +143,57 @@ class OverlayWindow(QtWidgets.QWidget):
         self.resize(720, 520)
 
     def _apply_styles(self):
-        self.setStyleSheet("""
-            #card {
-                background: rgba(18, 18, 18, 220);
-                border: 1px solid rgba(255, 255, 255, 35);
-                border-radius: 14px;
-            }
-            #title {
-                color: white;
+        # Global stylesheet uses theme tokens above
+        self.setStyleSheet(f"""
+            #card {{
+                background: {self.CARD_BG};
+                border: 1px solid {self.CARD_BORDER};
+                border-radius: 16px;
+            }}
+            #title {{
+                color: {self.ACCENT};
                 font-size: 16px;
-                font-weight: 700;
-            }
-            #meta {
-                color: rgba(255, 255, 255, 170);
+                font-weight: 800;
+                letter-spacing: 0.3px;
+            }}
+            #meta {{
+                color: {self.TEXT_SUB};
                 font-size: 12px;
-            }
-            #question {
-                color: white;
+            }}
+            #question {{
+                color: {self.TEXT_MAIN};
                 font-size: 14px;
-                font-weight: 600;
+                font-weight: 700;
                 padding-top: 4px;
                 padding-bottom: 4px;
-            }
-            #diagram {
-                background: rgba(255, 255, 255, 10);
-                border: 1px solid rgba(255, 255, 255, 25);
+            }}
+            #diagram {{
+                background: {self.DIAGRAM_BG};
+                border: 1px solid {self.DIAGRAM_BORDER};
                 border-radius: 12px;
-                padding: 8px;
-            }
-            #choice {
-                color: rgba(255, 255, 255, 210);
+                padding: 10px;
+            }}
+            #choice {{
+                color: {self.TEXT_MAIN};
                 font-size: 13px;
-                padding: 8px 10px;
-                border-radius: 10px;
-                background: rgba(255, 255, 255, 18);
-                border: none;
+                padding: 10px 12px;
+                border-radius: 12px;
+                background: {self.BUTTON_BG};
+                border: 1px solid {self.BUTTON_BORDER};
                 text-align: left;
-            }
-            #choice:hover {
-                background: rgba(255, 255, 255, 35);
-            }
-            #hint {
-                color: rgba(255, 255, 255, 140);
+            }}
+            #choice:hover {{
+                background: {self.BUTTON_HOVER};
+                border: 1px solid rgba(255, 255, 255, 32);
+            }}
+            #choice:pressed {{
+                background: rgba(59, 130, 246, 40);
+                border: 1px solid rgba(59, 130, 246, 120);
+            }}
+            #hint {{
+                color: {self.TEXT_HINT};
                 font-size: 12px;
-            }
+            }}
         """)
 
     def set_answer_handler(self, handler: Optional[Callable[[int], None]]):
@@ -177,25 +214,20 @@ class OverlayWindow(QtWidgets.QWidget):
         Compute the box we can use for the diagram inside the current window,
         accounting for margins and other widgets.
         """
-        # Width inside the card
         box_w = max(120, self.card.width() - 40)
 
-        # Height available: window height minus fixed UI elements
         fixed_h = 0
         fixed_h += self.title.sizeHint().height()
         fixed_h += self.meta.sizeHint().height()
         fixed_h += self.question_label.sizeHint().height()
         fixed_h += self.hint.sizeHint().height()
 
-        # Buttons (roughly)
         for b in self.choice_buttons:
             fixed_h += b.sizeHint().height()
 
-        # Layout spacing + margins (rough estimate)
-        fixed_h += 16 + 14 + 16  # top/bottom padding-ish
-        fixed_h += 10 * 8        # spacing between items
+        fixed_h += 16 + 14 + 16
+        fixed_h += 10 * 8
 
-        # Whatever remains goes to the diagram
         box_h = max(120, int(self.height() - fixed_h))
         return QtCore.QSize(box_w, box_h)
 
@@ -222,26 +254,19 @@ class OverlayWindow(QtWidgets.QWidget):
             return
         geo = screen.availableGeometry()
 
-        # cap window size to screen
         max_w = int(geo.width() * 0.90)
         max_h = int(geo.height() * 0.90)
 
-        # baseline size
         target_w = min(max_w, max(720, self.width()))
         target_h = min(max_h, max(520, self.height()))
 
-        # If we have a diagram, try to allocate more height
         if self._diagram_pixmap and not self._diagram_pixmap.isNull():
-            # allow taller window for diagrams, but within cap
             target_h = min(max_h, max(target_h, 680))
-
-            # allow wider window if diagram is wide (still capped)
             if self._diagram_pixmap.width() > 900:
                 target_w = min(max_w, max(target_w, 900))
 
         self.resize(target_w, target_h)
 
-        # Optional: keep it on-screen (center-ish)
         x = geo.x() + (geo.width() - self.width()) // 2
         y = geo.y() + (geo.height() - self.height()) // 2
         self.move(x, y)
@@ -257,6 +282,7 @@ class OverlayWindow(QtWidgets.QWidget):
         if not os.path.exists(path):
             self._diagram_pixmap = None
             self.image_label.setText(f"(Image not found: {img_path})")
+            self.image_label.setStyleSheet(f"color: {self.WARN};")
             self.image_label.setVisible(True)
             return
 
@@ -264,29 +290,42 @@ class OverlayWindow(QtWidgets.QWidget):
         if pix.isNull():
             self._diagram_pixmap = None
             self.image_label.setText(f"(Could not load image: {img_path})")
+            self.image_label.setStyleSheet(f"color: {self.WARN};")
             self.image_label.setVisible(True)
             return
 
         self._diagram_pixmap = pix
+        self.image_label.setStyleSheet("")  # reset any warning style
         self.image_label.setVisible(True)
 
-        # Resize window to give the image space, then render scaled
         self._auto_resize_for_diagram()
         self._render_diagram()
 
     def resizeEvent(self, event: QtGui.QResizeEvent):
         super().resizeEvent(event)
-        # Re-render diagram on resize so it always fits
         if self.image_label.isVisible():
             self._render_diagram()
 
+    def _set_buttons_enabled(self, enabled: bool):
+        for b in self.choice_buttons:
+            b.setEnabled(enabled)
+
+    def _reset_choice_styles(self):
+        # Restore baseline style sheet by clearing per-widget style overrides
+        for b in self.choice_buttons:
+            b.setStyleSheet("")
+        self._feedback_active = False
+        self._correct_index = None
+
     def set_question(self, q: Question, source: str = "local", ai_mode: str = "off", snooze_minutes: int = 10):
         self.current_question = q
+        self._reset_choice_styles()
+        self._set_buttons_enabled(True)
+
         self.title.setText("BrainBuff")
         self.meta.setText(f"Topic: {q.topic} • Difficulty: {q.difficulty} • Source: {source.upper()}")
         self.question_label.setText(q.question)
 
-        # Show/hide diagram based on q.image
         img_path = getattr(q, "image", None)
         self._set_image(img_path)
 
@@ -297,14 +336,38 @@ class OverlayWindow(QtWidgets.QWidget):
             f"Click choices • (Full app: 1–4 answer, F9 snooze {snooze_minutes}m, F10 mode {ai_mode.upper()})"
         )
 
-        # Let Qt lay out labels first, then re-render (important for correct sizeHint)
         QtCore.QTimer.singleShot(0, self._render_diagram)
 
     def show_feedback(self, correct: bool, explanation: str = ""):
+        """
+        Update hint styling + lock choices briefly.
+        If possible, highlight correct answer (and user's wrong if available).
+        """
+        # hint text
         if correct:
             self.hint.setText("✅ Correct! " + (explanation or ""))
+            self.hint.setStyleSheet(f"color: {self.GOOD}; font-size: 12px;")
         else:
             self.hint.setText("❌ Not quite. " + (explanation or ""))
+            self.hint.setStyleSheet(f"color: {self.BAD}; font-size: 12px;")
+
+        # Highlight correct answer if known
+        if self.current_question is not None:
+            self._correct_index = int(self.current_question.answer_index)
+
+            for i, b in enumerate(self.choice_buttons):
+                if i == self._correct_index:
+                    b.setStyleSheet(f"""
+                        background: rgba(34, 197, 94, 55);
+                        border: 1px solid rgba(34, 197, 94, 180);
+                        color: {self.TEXT_MAIN};
+                        border-radius: 12px;
+                        padding: 10px 12px;
+                        text-align: left;
+                    """)
+        # Prevent double-click spam after answer
+        self._set_buttons_enabled(False)
+        self._feedback_active = True
 
 
 # -------------------- Standalone demo --------------------

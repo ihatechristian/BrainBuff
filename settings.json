@@ -21,4 +21,5 @@
 
   "auto_dismiss_after_answer_ms": 1500,
   "mouse_move_throttle_sec": 0.20
+  
 }
