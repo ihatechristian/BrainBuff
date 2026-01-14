@@ -224,16 +224,19 @@ class BrainBuffApp(QtCore.QObject):
         if (now - self._last_move_time) < float(self.settings.mouse_move_throttle_sec):
             return
         self._last_move_time = now
+        print(f"[MOUSE MOVE] x={x}, y={y}")  # DEBUG
         self.sig_activity.emit()
 
     def _on_mouse_click(self, x, y, button, pressed):
         if self._point_over_overlay():
             return
+        print(f"[MOUSE CLICK] button={button}, pressed={pressed}")  # DEBUG
         self.sig_activity.emit()
 
     def _on_mouse_scroll(self, x, y, dx, dy):
         if self._point_over_overlay():
             return
+        print(f"[MOUSE SCROLL] dx={dx}, dy={dy}")  # DEBUG
         self.sig_activity.emit()
 
     def _on_key_press(self, key):
@@ -457,6 +460,13 @@ class BrainBuffApp(QtCore.QObject):
 
 def main():
     settings = ensure_settings_file("settings.json")
+    
+    # DEBUG: Print loaded settings
+    print("=== LOADED SETTINGS ===")
+    print(f"cooldown_sec: {settings.cooldown_sec}")
+    print(f"activity_window_sec: {settings.activity_window_sec}")
+    print(f"low_activity_threshold: {settings.low_activity_threshold}")
+    print("=======================")
 
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("BrainBuff")

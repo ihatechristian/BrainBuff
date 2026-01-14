@@ -1,9 +1,9 @@
 {
   "activity_window_sec": 3,
-  "low_activity_threshold": 3,
-  "high_activity_spike_threshold": 25,
+  "low_activity_threshold": 10,
+  "high_activity_spike_threshold": 40,
 
-  "cooldown_sec": 8,
+  "cooldown_sec": 10,
   "snooze_minutes": 3,
   "max_popups_per_hour": 9999,
 
@@ -12,7 +12,7 @@
   "ai_difficulty": "easy",
   "ai_model": "gpt-4.1-mini",
 
-  "cluster_mode": "adaptive", //adaptive or off
+  "cluster_mode": "adaptive",
 
 
   "overlay_position": "top_right",
