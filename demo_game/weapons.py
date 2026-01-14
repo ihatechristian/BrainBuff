@@ -55,6 +55,12 @@ class ProjectileWeapon:
         # Update projectiles
         for p in self.projectiles:
             p.update(dt)
+            # Check collision with enemies
+            for e in enemies:
+                if circle_hit(p.pos, p.radius, e.pos, e.radius):
+                    e.take_damage(p.damage)
+                    p.alive = False
+                    break
         self.projectiles = [p for p in self.projectiles if p.alive]
 
         self.timer -= dt

@@ -6,15 +6,43 @@ import sys
 import time
 from collections import deque
 from dataclasses import asdict, dataclass
-from typing import Deque, Optional, Set
+from typing import Deque, Set
+
+import ctypes
+from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from pynput import keyboard, mouse
 
 from overlay_ui import OverlayWindow
 from question_engine import QuestionEngine
-import ctypes
 
+
+# ==============================
+# Pause flag bridge (PROJECT ROOT)
+# ==============================
+# Your structure:
+#   BRAINBUFF/
+#     overlay_trigger.py   <-- this file
+#     overlay_pause.txt    <-- created/deleted by this file
+#     demo_game/
+#       main.py            <-- reads BRAINBUFF/overlay_pause.txt
+PROJECT_ROOT = Path(__file__).resolve().parent
+PAUSE_FILE = PROJECT_ROOT / "overlay_pause.txt"
+
+
+def set_game_paused(paused: bool):
+    """
+    paused=True  -> write '1' to overlay_pause.txt
+    paused=False -> delete overlay_pause.txt (resume)
+    """
+    try:
+        if paused:
+            PAUSE_FILE.write_text("1", encoding="utf-8")
+        else:
+            PAUSE_FILE.unlink(missing_ok=True)
+    except Exception as e:
+        print("Pause file error:", e)
 
 
 # -------------------- Settings --------------------
@@ -106,7 +134,7 @@ class BrainBuffApp(QtCore.QObject):
             ai_cache_path="ai_cache.jsonl",
             ai_mode=settings.ai_mode,
             ai_model=settings.ai_model,
-            cluster_mode=settings.cluster_mode,  # <-- ADD THIS
+            cluster_mode=settings.cluster_mode,
         )
 
         self.overlay = OverlayWindow(on_answer=self.answer)
@@ -142,6 +170,9 @@ class BrainBuffApp(QtCore.QObject):
 
         # Initial placement
         self._place_overlay()
+
+        # Ensure we start unpaused
+        set_game_paused(False)
 
     def _force_topmost_no_activate(self):
         """Force overlay above borderless game windows on Windows (no focus steal)."""
@@ -349,6 +380,9 @@ class BrainBuffApp(QtCore.QObject):
         self.last_popup_time = now
         self.popups_history.append(now)
 
+        # ✅ PAUSE GAME when overlay shows
+        set_game_paused(True)
+
         # Show overlay and force TOPMOST (helps over borderless pygame windows)
         self.overlay.show()
         self.overlay.raise_()
@@ -375,9 +409,13 @@ class BrainBuffApp(QtCore.QObject):
 
     def hide_overlay(self):
         print("HIDE OVERLAY", time.time())
+
         if self.overlay_visible:
             self.overlay.hide()
             self.overlay_visible = False
+
+        # ✅ RESUME GAME when overlay hides (always try)
+        set_game_paused(False)
 
     def snooze(self):
         self.hide_overlay()
@@ -406,6 +444,10 @@ class BrainBuffApp(QtCore.QObject):
             for b in self.overlay.choice_buttons:
                 b.setText("")
             self.overlay.hint.setText(msg)
+
+            # ✅ Pause during toast as well (since overlay is visible)
+            set_game_paused(True)
+
             self.overlay.show()
             self.overlay.raise_()
             self.overlay_visible = True
@@ -425,6 +467,9 @@ def main():
         sys.exit(app.exec())
     except KeyboardInterrupt:
         pass
+    finally:
+        # Ensure game is resumed if overlay closes
+        set_game_paused(False)
 
 
 if __name__ == "__main__":

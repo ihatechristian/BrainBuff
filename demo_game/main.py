@@ -19,8 +19,9 @@ os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0"
 
 import pygame
 from pygame import Vector2
-import threading
 import sys
+import subprocess
+from pathlib import Path
 
 import settings as S
 from player import Player
@@ -28,10 +29,33 @@ from enemy import spawn_enemy_at_screen_edge
 from weapons import WeaponSystem
 from upgrades import UpgradeManager
 
-# Import overlay functionality from parent directory
-import subprocess
-from pathlib import Path
+# ============================================================
+# Overlay pause bridge (ABSOLUTE PATH to project root)
+# Project structure:
+#   BRAINBUFF/
+#     overlay_trigger.py
+#     demo_game/
+#       main.py   <-- this file
+# Pause flag must be at:
+#   BRAINBUFF/overlay_pause.txt
+# ============================================================
+PROJECT_ROOT = Path(__file__).resolve().parents[1]  # -> BRAINBUFF/
+OVERLAY_PAUSE_FILE = PROJECT_ROOT / "overlay_pause.txt"
 
+
+def overlay_requests_pause() -> bool:
+    """
+    Overlay writes PROJECT_ROOT/overlay_pause.txt:
+      '1' => pause gameplay
+      '0' or missing => continue
+    """
+    try:
+        return OVERLAY_PAUSE_FILE.read_text(encoding="utf-8").strip() == "1"
+    except FileNotFoundError:
+        return False
+    except Exception:
+        # If overlay is writing while we read, don't pause this frame.
+        return False
 
 
 class ExpOrb:
@@ -92,11 +116,17 @@ class Game:
         self.shake = 0.0
         self.shake_offset = Vector2(0, 0)
 
+        # overlay pause state
+        self.overlay_paused = False
+
     def run(self):
         running = True
         while running:
             dt = self.clock.tick(S.FPS) / 1000.0
             dt = min(dt, 1 / 30)  # clamp for stability on hitches
+
+            # Read overlay pause flag once per frame
+            self.overlay_paused = overlay_requests_pause()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -124,10 +154,13 @@ class Game:
                             self.upgrades.take(self.pending_choices[2])
                             self.state = "playing"
 
+            # ✅ Only advance gameplay if playing AND overlay isn't requesting pause
             if self.state == "playing":
-                self.update_playing(dt)
-                if self.player.is_dead():
-                    self.state = "gameover"
+                if not self.overlay_paused:
+                    self.update_playing(dt)
+                    if self.player.is_dead():
+                        self.state = "gameover"
+                # else: do nothing -> fully paused, but still renders
 
             # draw
             self.draw()
@@ -172,7 +205,6 @@ class Game:
         self.update_camera(dt)
 
         # Spawn scaling
-        # spawn interval decreases over time, and also spawn bursts gradually
         spawn_interval = max(0.12, self.base_spawn_interval * (1.0 - 0.55 * self.difficulty))
         self.spawn_timer -= dt
         if self.spawn_timer <= 0:
@@ -206,7 +238,6 @@ class Game:
                 alive_enemies.append(e)
             else:
                 self.player.kills += 1
-                # drop a couple orbs sometimes
                 drops = 1 if random.random() < 0.75 else 2
                 for _ in range(drops):
                     jitter = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
@@ -218,7 +249,6 @@ class Game:
         for orb in self.orbs:
             d = self.player.pos.distance_to(orb.pos)
             if d <= S.EXP_PICKUP_RADIUS:
-                # pull in
                 if d > 1:
                     orb.pos += (self.player.pos - orb.pos).normalize() * (520 * dt)
             if d <= (self.player.radius + orb.radius + 4):
@@ -234,23 +264,18 @@ class Game:
                 break
 
     def draw_grid(self, surf: pygame.Surface):
-        # camera + shake offset
         cam = self.camera + self.shake_offset
 
-        # Determine visible world rect
         left = cam.x
         top = cam.y
         right = cam.x + S.WIDTH
         bottom = cam.y + S.HEIGHT
 
-        # Snap to grid
         gx0 = int(math.floor(left / S.GRID_SPACING) * S.GRID_SPACING)
         gy0 = int(math.floor(top / S.GRID_SPACING) * S.GRID_SPACING)
 
-        # background
         surf.fill(S.BLACK)
 
-        # draw grid lines
         x = gx0
         while x < right:
             sx = int(x - cam.x)
@@ -282,8 +307,12 @@ class Game:
         surf.blit(self.font.render(f"Time: {t}", True, S.WHITE), (S.WIDTH - 160, 16))
         surf.blit(self.font.render(f"Kills: {self.player.kills}", True, S.WHITE), (S.WIDTH - 160, 42))
 
+        # Overlay pause indicator
+        if self.state == "playing" and self.overlay_paused:
+            label = self.font_mid.render("PAUSED (Overlay)", True, S.WHITE)
+            surf.blit(label, (S.WIDTH / 2 - label.get_width() / 2, 90))
+
     def draw_levelup_overlay(self, surf: pygame.Surface):
-        # dim
         overlay = pygame.Surface((S.WIDTH, S.HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
         surf.blit(overlay, (0, 0))
@@ -294,7 +323,6 @@ class Game:
         hint = self.font.render("Pick 1 upgrade: press 1 / 2 / 3", True, S.WHITE)
         surf.blit(hint, (S.WIDTH / 2 - hint.get_width() / 2, 135))
 
-        # cards
         card_w = 310
         card_h = 170
         gap = 28
@@ -352,7 +380,7 @@ class Game:
         info = self.font.render("Level-ups pause the game. Choose upgrades with 1/2/3.", True, S.GRAY)
         surf.blit(info, (S.WIDTH / 2 - info.get_width() / 2, 290))
 
-        tip = self.font.render("Tip: your overlay can read game state later from a shared module/log.", True, (120, 120, 140))
+        tip = self.font.render("Tip: your overlay can pause by writing overlay_pause.txt in project root.", True, (120, 120, 140))
         surf.blit(tip, (S.WIDTH / 2 - tip.get_width() / 2, 330))
 
     def draw_gameover(self, surf: pygame.Surface):
@@ -385,55 +413,30 @@ class Game:
             pygame.display.flip()
             return
 
-        # playing or levelup: draw world
         self.draw_grid(self.screen)
 
         cam = self.camera + self.shake_offset
 
-        # draw orbs
         for orb in self.orbs:
             orb.draw(self.screen, cam)
 
-        # draw enemies
         for e in self.enemies:
             e.draw(self.screen, cam)
 
-        # draw player + weapons (weapons need aim dir)
         self.player.draw(self.screen, cam)
         self.weapons.draw(self.screen, cam, self.player, self.aim_dir_world())
 
-        # UI
         self.draw_ui(self.screen)
 
-        # level-up overlay pauses gameplay
         if self.state == "levelup":
             self.draw_levelup_overlay(self.screen)
 
         pygame.display.flip()
 
 
-def start_overlay():
-    """Start the BrainBuff overlay in a separate thread"""
-    if not OVERLAY_AVAILABLE:
-        print("Overlay not available - missing dependencies")
-        return
-    
-    try:
-        # Look for settings.json in parent directory
-        settings_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "settings.json")
-        settings = load_settings(settings_path)
-        app = QtWidgets.QApplication(sys.argv if not QtWidgets.QApplication.instance() else [])
-        app.setApplicationName("BrainBuff")
-        
-        controller = BrainBuffApp(settings)
-        app.exec()
-    except Exception as e:
-        print(f"Overlay error: {e}")
-
 def start_overlay_process():
-    # game/main.py is inside a folder, overlay_trigger.py is in the parent project root
-    project_root = Path(__file__).resolve().parents[1]
-    overlay_script = project_root / "overlay_trigger.py"
+    # overlay_trigger.py is in PROJECT_ROOT (BRAINBUFF/)
+    overlay_script = PROJECT_ROOT / "overlay_trigger.py"
 
     if not overlay_script.exists():
         print("overlay_trigger.py not found at:", overlay_script)
@@ -442,9 +445,10 @@ def start_overlay_process():
     try:
         proc = subprocess.Popen(
             [sys.executable, str(overlay_script)],
-            cwd=str(project_root),
+            cwd=str(PROJECT_ROOT),
         )
         print("BrainBuff overlay started:", overlay_script)
+        print("Game reading pause flag at:", OVERLAY_PAUSE_FILE)
         return proc
     except Exception as e:
         print("Failed to start overlay:", e)
@@ -464,13 +468,8 @@ def main():
     try:
         Game(screen).run()
     finally:
-        # Optional: close overlay when game exits
         if overlay_proc is not None:
             overlay_proc.terminate()
-
-
-
-
 
 
 if __name__ == "__main__":
