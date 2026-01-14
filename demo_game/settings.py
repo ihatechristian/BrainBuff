@@ -25,7 +25,7 @@ GRID_SPACING = 64
 GRID_COLOR = (45, 45, 45)
 
 # Player base stats
-PLAYER_RADIUS = 16
+PLAYER_RADIUS = 50
 PLAYER_BASE_SPEED = 260.0
 PLAYER_BASE_MAX_HP = 100.0
 PLAYER_IFRAMES = 0.55
@@ -39,7 +39,7 @@ ENEMY_SPAWN_DISTANCE = 80.0  # spawn outside the visible screen by this much
 DIFFICULTY_RAMP_PER_SEC = 0.015  # affects spawn rate and enemy stats over time
 
 # EXP
-ORB_RADIUS = 7
+ORB_RADIUS = 10
 ORB_EXP_VALUE = 6
 EXP_PICKUP_RADIUS = 42
 
@@ -52,15 +52,15 @@ PROJ_BASE_DAMAGE = 18.0
 PROJ_BASE_COOLDOWN = 0.38
 PROJ_BASE_SPEED = 720.0
 PROJ_BASE_LIFETIME = 1.2
-PROJ_RADIUS = 5
+PROJ_RADIUS = 8
 
 # Weapons: Blades (orbiting)
 BLADE_BASE_DAMAGE = 10.0
-BLADE_BASE_RADIUS = 60.0
+BLADE_BASE_RADIUS = 100.0
 BLADE_BASE_ROT_SPEED = 3.6  # radians/sec
 BLADE_BASE_COUNT = 2
 BLADE_HIT_INTERVAL = 0.22  # per enemy hit cooldown (prevents insane DPS)
-BLADE_SIZE = 10
+BLADE_SIZE = 20
 
 # Weapons: Lightning (periodic strike)
 LIGHTNING_BASE_DAMAGE = 32.0

@@ -1,6 +1,8 @@
 # player.py
 from __future__ import annotations
 import math
+from pathlib import Path
+
 import pygame
 from pygame import Vector2
 import settings as S
@@ -33,6 +35,25 @@ class Player:
 
         # Kills
         self.kills = 0
+
+        # =========================
+        # Sprite (player.png)
+        # Your folder layout:
+        #   BRAINBUFF/
+        #     images/player.png
+        #     demo_game/player.py  <-- this file
+        # =========================
+        self.sprite = None
+        try:
+            project_root = Path(__file__).resolve().parents[1]  # -> BRAINBUFF/
+            img_path = project_root / "images" / "player.png"
+            img = pygame.image.load(str(img_path)).convert_alpha()
+            # Scale based on PLAYER_RADIUS setting
+            size = int(self.radius * 2.5)
+            img = pygame.transform.smoothscale(img, (size, size))
+            self.sprite = img
+        except Exception as e:
+            print("Player sprite load failed (fallback to circle):", e)
 
     def _exp_needed_for(self, level: int) -> int:
         # gentle curve
@@ -87,14 +108,39 @@ class Player:
 
     def draw(self, surf: pygame.Surface, camera: Vector2):
         screen_pos = self.pos - camera
-        # blink a bit during i-frames
+
+        # blink during i-frames
         blink = (self.iframes > 0 and int(pygame.time.get_ticks() / 80) % 2 == 0)
-        color = S.CYAN if not blink else S.WHITE
 
-        pygame.draw.circle(surf, color, (int(screen_pos.x), int(screen_pos.y)), self.radius)
+        # Aim direction based on mouse (convert screen mouse -> world by +camera)
+        mx, my = pygame.mouse.get_pos()
+        mouse_world = Vector2(mx, my) + camera
+        aim = mouse_world - self.pos
+        if aim.length_squared() > 0:
+            aim = aim.normalize()
+        else:
+            aim = Vector2(1, 0)
 
-        # small "aim" indicator (direction arrow) is handled in weapons, but we keep player simple
-        pygame.draw.circle(surf, (10, 10, 10), (int(screen_pos.x), int(screen_pos.y)), 4)
+        # Draw sprite if available, else fallback to circle
+        if self.sprite is not None:
+            # Rotate to face mouse
+            angle_deg = -math.degrees(math.atan2(aim.y, aim.x))
+            rotated = pygame.transform.rotate(self.sprite, angle_deg)
+            rect = rotated.get_rect(center=(int(screen_pos.x), int(screen_pos.y)))
+
+            if blink:
+                # make it semi-transparent during blink
+                tmp = rotated.copy()
+                tmp.set_alpha(110)
+                surf.blit(tmp, rect)
+            else:
+                surf.blit(rotated, rect)
+        else:
+            color = S.CYAN if not blink else S.WHITE
+            pygame.draw.circle(surf, color, (int(screen_pos.x), int(screen_pos.y)), self.radius)
+
+        # tiny center dot (helps you see actual collision center)
+        pygame.draw.circle(surf, (10, 10, 10), (int(screen_pos.x), int(screen_pos.y)), 3)
 
     def exp_ratio(self) -> float:
         return self.exp / max(1, self.exp_to_next)

@@ -2,6 +2,8 @@
 from __future__ import annotations
 import math
 import random
+from pathlib import Path
+
 import pygame
 from pygame import Vector2
 import settings as S
@@ -13,6 +15,11 @@ def clamp(v: float, lo: float, hi: float) -> float:
 
 def circle_hit(a_pos: Vector2, a_r: float, b_pos: Vector2, b_r: float) -> bool:
     return (a_pos - b_pos).length_squared() <= (a_r + b_r) ** 2
+
+
+# Shared project root (BRAINBUFF/)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+IMAGES_DIR = PROJECT_ROOT / "images"
 
 
 class Projectile:
@@ -52,10 +59,9 @@ class ProjectileWeapon:
         self.projectiles: list[Projectile] = []
 
     def update(self, dt: float, player_pos: Vector2, aim_dir: Vector2, enemies: list):
-        # Update projectiles
+        # Update projectiles + collision
         for p in self.projectiles:
             p.update(dt)
-            # Check collision with enemies
             for e in enemies:
                 if circle_hit(p.pos, p.radius, e.pos, e.radius):
                     e.take_damage(p.damage)
@@ -123,6 +129,7 @@ class ProjectileWeapon:
 class BladeWeapon:
     """
     Rotating blades orbiting the player; damages nearby enemies.
+    Now draws sword.png sprites instead of dots.
     """
     def __init__(self):
         self.level = 1
@@ -135,6 +142,20 @@ class BladeWeapon:
 
         # per-enemy hit cooldown tracking
         self._hit_cd: dict[int, float] = {}
+
+        # =========================
+        # Sword sprite (sword.png)
+        # BRAINBUFF/images/sword.png
+        # =========================
+        self.sword_sprite = None
+        try:
+            img_path = IMAGES_DIR / "sword.png"
+            img = pygame.image.load(str(img_path)).convert_alpha()
+            # size for sword sprite (tweak if needed)
+            img = pygame.transform.smoothscale(img, (80, 80))
+            self.sword_sprite = img
+        except Exception as e:
+            print("Sword sprite load failed (fallback to dots):", e)
 
     def update(self, dt: float, player_pos: Vector2, enemies: list):
         self.angle = (self.angle + self.rot_speed * dt) % (math.tau)
@@ -154,7 +175,6 @@ class BladeWeapon:
             blade_pos = player_pos + Vector2(math.cos(a), math.sin(a)) * self.radius
 
             for e in enemies:
-                # use id(e) as key
                 key = id(e)
                 if key in self._hit_cd:
                     continue
@@ -164,6 +184,7 @@ class BladeWeapon:
 
     def draw(self, surf: pygame.Surface, camera: Vector2, player_pos: Vector2):
         center = player_pos - camera
+
         # orbit circle hint
         pygame.draw.circle(surf, (70, 70, 90), (int(center.x), int(center.y)), int(self.radius), 1)
 
@@ -171,7 +192,15 @@ class BladeWeapon:
             a = self.angle + (i / self.count) * math.tau
             blade_pos = player_pos + Vector2(math.cos(a), math.sin(a)) * self.radius
             p = blade_pos - camera
-            pygame.draw.circle(surf, S.PURPLE, (int(p.x), int(p.y)), S.BLADE_SIZE)
+
+            if self.sword_sprite is not None:
+                # Rotate sword to face its orbit direction (tangent-ish)
+                angle_deg = -math.degrees(a)  # visual feel; tweak if you want different orientation
+                rot = pygame.transform.rotate(self.sword_sprite, angle_deg)
+                rect = rot.get_rect(center=(int(p.x), int(p.y)))
+                surf.blit(rot, rect)
+            else:
+                pygame.draw.circle(surf, S.PURPLE, (int(p.x), int(p.y)), S.BLADE_SIZE)
 
 
 class LightningStrike:
@@ -188,7 +217,6 @@ class LightningStrike:
 
     def draw(self, surf: pygame.Surface, camera: Vector2):
         p = self.pos - camera
-        # simple flash ring
         pygame.draw.circle(surf, S.BLUE, (int(p.x), int(p.y)), int(self.radius), 3)
         pygame.draw.circle(surf, S.WHITE, (int(p.x), int(p.y)), int(self.radius * 0.35), 2)
 
@@ -224,7 +252,6 @@ class LightningWeapon:
         pool = in_range[:min(10, len(in_range))]
         for _ in range(self.strike_count):
             e = random.choice(pool)
-            # small jitter to not always be identical
             jitter = Vector2(random.uniform(-12, 12), random.uniform(-12, 12))
             targets.append(e.pos + jitter)
         return targets
