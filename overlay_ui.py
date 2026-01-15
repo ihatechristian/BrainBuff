@@ -98,7 +98,7 @@ class OverlayWindow(QtWidgets.QWidget):
         # Diagram/image area (NO scroll)
         self.image_label = QtWidgets.QLabel("")
         self.image_label.setObjectName("diagram")
-        self.image_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.image_label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.image_label.setVisible(False)
         self.image_label.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding,
@@ -209,6 +209,17 @@ class OverlayWindow(QtWidgets.QWidget):
         # relative to where you run the script (project root)
         return os.path.join(os.getcwd(), img_path)
 
+    # ✅ NEW: cap diagram size based on screen to keep overlay readable
+    def _diagram_max_size(self) -> QtCore.QSize:
+        screen = QtWidgets.QApplication.primaryScreen()
+        if not screen:
+            return QtCore.QSize(900, 500)
+        geo = screen.availableGeometry()
+
+        max_w = int(geo.width() * 0.80)
+        max_h = int(geo.height() * 0.42)  # good for diagrams/tables
+        return QtCore.QSize(max_w, max_h)
+
     def _available_diagram_box(self) -> QtCore.QSize:
         """
         Compute the box we can use for the diagram inside the current window,
@@ -231,14 +242,21 @@ class OverlayWindow(QtWidgets.QWidget):
         box_h = max(120, int(self.height() - fixed_h))
         return QtCore.QSize(box_w, box_h)
 
+    # ✅ UPDATED: clamp scaling to BOTH box size + screen size
     def _render_diagram(self):
-        """Scale the original pixmap into the available box (KeepAspectRatio)."""
+        """Scale the original pixmap into the available box (KeepAspectRatio) with screen limits."""
         if not self._diagram_pixmap or self._diagram_pixmap.isNull():
             return
 
         box = self._available_diagram_box()
+        cap = self._diagram_max_size()
+
+        target_w = min(box.width(), cap.width())
+        target_h = min(box.height(), cap.height())
+
         scaled = self._diagram_pixmap.scaled(
-            box,
+            target_w,
+            target_h,
             QtCore.Qt.KeepAspectRatio,
             QtCore.Qt.SmoothTransformation
         )
@@ -247,7 +265,6 @@ class OverlayWindow(QtWidgets.QWidget):
     def _auto_resize_for_diagram(self):
         """
         Increase window size (within screen limits) so the diagram has room.
-        This helps avoid tiny diagrams.
         """
         screen = QtWidgets.QApplication.primaryScreen()
         if not screen:
@@ -261,7 +278,10 @@ class OverlayWindow(QtWidgets.QWidget):
         target_h = min(max_h, max(520, self.height()))
 
         if self._diagram_pixmap and not self._diagram_pixmap.isNull():
-            target_h = min(max_h, max(target_h, 680))
+            # slightly taller for diagrams, but not too tall
+            target_h = min(max_h, max(target_h, int(geo.height() * 0.68)))
+
+            # allow wider overlay for wide tables/diagrams
             if self._diagram_pixmap.width() > 900:
                 target_w = min(max_w, max(target_w, 900))
 
@@ -298,8 +318,10 @@ class OverlayWindow(QtWidgets.QWidget):
         self.image_label.setStyleSheet("")  # reset any warning style
         self.image_label.setVisible(True)
 
+        # Resize window to give the image space, then render scaled
         self._auto_resize_for_diagram()
-        self._render_diagram()
+        # render after layout settles (important)
+        QtCore.QTimer.singleShot(0, self._render_diagram)
 
     def resizeEvent(self, event: QtGui.QResizeEvent):
         super().resizeEvent(event)
@@ -311,11 +333,11 @@ class OverlayWindow(QtWidgets.QWidget):
             b.setEnabled(enabled)
 
     def _reset_choice_styles(self):
-        # Restore baseline style sheet by clearing per-widget style overrides
         for b in self.choice_buttons:
             b.setStyleSheet("")
         self._feedback_active = False
         self._correct_index = None
+        self.hint.setStyleSheet("")  # reset hint color too
 
     def set_question(self, q: Question, source: str = "local", ai_mode: str = "off", snooze_minutes: int = 10):
         self.current_question = q
@@ -339,11 +361,6 @@ class OverlayWindow(QtWidgets.QWidget):
         QtCore.QTimer.singleShot(0, self._render_diagram)
 
     def show_feedback(self, correct: bool, explanation: str = ""):
-        """
-        Update hint styling + lock choices briefly.
-        If possible, highlight correct answer (and user's wrong if available).
-        """
-        # hint text
         if correct:
             self.hint.setText("✅ Correct! " + (explanation or ""))
             self.hint.setStyleSheet(f"color: {self.GOOD}; font-size: 12px;")
@@ -351,7 +368,6 @@ class OverlayWindow(QtWidgets.QWidget):
             self.hint.setText("❌ Not quite. " + (explanation or ""))
             self.hint.setStyleSheet(f"color: {self.BAD}; font-size: 12px;")
 
-        # Highlight correct answer if known
         if self.current_question is not None:
             self._correct_index = int(self.current_question.answer_index)
 
@@ -365,7 +381,7 @@ class OverlayWindow(QtWidgets.QWidget):
                         padding: 10px 12px;
                         text-align: left;
                     """)
-        # Prevent double-click spam after answer
+
         self._set_buttons_enabled(False)
         self._feedback_active = True
 
