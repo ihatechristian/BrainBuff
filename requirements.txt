@@ -12,10 +12,10 @@ pygame>=2.5.2
 # --- Clustering / similarity ---
 scikit-learn==1.5.2
 scipy>=1.10
-
-# --- OCR ingestion (folder of question images) ---
 numpy==1.26.4
+
+# --- OCR ingestion ---
 paddlepaddle==2.6.2
 paddleocr==2.7.3
-opencv-python==4.13.0.90
+opencv-python<=4.6.0.66
 Pillow>=10.0.0
