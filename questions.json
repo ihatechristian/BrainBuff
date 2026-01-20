@@ -1,0 +1,34 @@
+[
+  {
+    "qid": 1,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Find the product of 322 and 7.",
+    "choices": [
+      "44",
+      "46",
+      "2144",
+      "2254"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q001.png"
+  },
+  {
+    "qid": 2,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "3 groups of = 4 x 9",
+    "choices": [
+      "1",
+      "12 ...",
+      "3",
+      "36 ("
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q002.png"
+  }
+]
