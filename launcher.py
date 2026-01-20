@@ -11,7 +11,7 @@ from PySide6 import QtWidgets, QtCore
 
 
 # -----------------------------
-# Paths
+# Paths (saves the settings into settings.json)
 # -----------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent
 SETTINGS_PATH = PROJECT_ROOT / "settings.json"
