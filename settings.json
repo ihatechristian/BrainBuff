@@ -2,24 +2,17 @@
   "activity_window_sec": 3,
   "low_activity_threshold": 10,
   "high_activity_spike_threshold": 40,
-
-  "cooldown_sec": 30,
+  "cooldown_sec": 20,
   "snooze_minutes": 3,
   "max_popups_per_hour": 9999,
-
   "ai_mode": "off",
   "ai_grade_level": "Primary 3–6",
   "ai_difficulty": "easy",
   "ai_model": "gpt-4.1-mini",
-
   "cluster_mode": "adaptive",
-
-
   "overlay_position": "top_right",
   "overlay_margin_px": 20,
   "monitor_index": 0,
-
   "auto_dismiss_after_answer_ms": 1500,
-  "mouse_move_throttle_sec": 0.20
-  
+  "mouse_move_throttle_sec": 0.2
 }

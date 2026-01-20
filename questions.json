@@ -35,593 +35,33 @@
     "qid": 3,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "5X6=",
+    "question": "In 8371, the digit 3 is in the place.",
     "choices": [
-      "5x5x5x5x5x5",
-      "5+5+5+5+5+5",
-      "5+6+5+6+5+6",
-      "6+6+6+6+6+6"
+      "ones",
+      "tens",
+      "hundreds",
+      "thousands"
     ],
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124237.png"
+    "source_image": "cropped_questions\\Q003.png"
   },
   {
     "qid": 4,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "Mr Tan bought 6 loaves of bread.Each loaf is cut into 8 slices of bread. How many slices of bread did Mr Tan have altogether?",
-    "choices": [
-      "2",
-      "14",
-      "48",
-      "68"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124256.png"
-  },
-  {
-    "qid": 8,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "4 thousands,6 hundreds and 9 ones is the same as",
-    "choices": [
-      "4069",
-      "4609",
-      "4690",
-      "4960"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124504.png"
-  },
-  {
-    "qid": 9,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "In 4012,the digit 1 is in the place.",
-    "choices": [
-      "ones",
-      "tens",
-      "hundreds",
-      "thousands"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124510.png"
-  },
-  {
-    "qid": 10,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "The difference between 3600 and 1228 is",
-    "choices": [
-      "2372",
-      "2382",
-      "2482",
-      "4828"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124516.png"
-  },
-  {
-    "qid": 11,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Www.sgc^ann.con Find the product of 7 and 238.",
-    "choices": [
-      "1416",
-      "1466",
-      "1616",
-      "1666"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124524.png"
-  },
-  {
-    "qid": 12,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "What is the missing number in.the following number pattern? 236523752395 24652515",
-    "choices": [
-      "2405",
-      "2415",
-      "2425",
-      "2435"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124530.png"
-  },
-  {
-    "qid": 13,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "The sum of two numbers is 400. The smaller number is 120. What is the difference between the two numbers?",
-    "choices": [
-      "160",
-      "280",
-      "520",
-      "800"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124536.png"
-  },
-  {
-    "qid": 14,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "I am a number between 20 and 40. You can find me in the multiplication tables of 6 and 8.What number am I?",
-    "choices": [
-      "24",
-      "28",
-      "30",
-      "32"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124542.png"
-  },
-  {
-    "qid": 15,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "A A X = 81 45 + A B What is the missing number represented by B",
-    "choices": [
-      "5",
-      "6",
-      "8",
-      "9"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124550.png"
-  },
-  {
-    "qid": 16,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "John saved $124 each month Tom saved 3 times as much as John each month How much would Tom save in 6 months?",
-    "choices": [
-      "$264",
-      "$372",
-      "$2232",
-      "$2976"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124557.png"
-  },
-  {
-    "qid": 17,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "The length of Ribbon A is 5 times as long as Ribbon B. Ribbon B is 36 cm shorter than Ribbon A. Find the length of Ribbon A.",
-    "choices": [
-      "41 cm",
-      "45 cm",
-      "54 cm",
-      "180 cm"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124605.png"
-  },
-  {
-    "qid": 19,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "In 6893,the digit 8 stands for",
-    "choices": [
-      "8",
-      "80",
-      "800",
-      "8000 ( )"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125120.png"
-  },
-  {
-    "qid": 20,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "In 1432the digit 1 is in the place.",
-    "choices": [
-      "ones",
-      "tens",
-      "hundreds",
-      "thousands ( )"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125125.png"
-  },
-  {
-    "qid": 21,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "2 h5min= min",
-    "choices": [
-      "25",
-      "125",
-      "205",
-      "250"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125136.png"
-  },
-  {
-    "qid": 22,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Sally wants to pack 40 oranges into bags.Each bag can hold at most 6 oranges. What is the least number of bags Sally needs?",
-    "choices": [
-      "6",
-      "7",
-      "34",
-      "46"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125144.png"
-  },
-  {
-    "qid": 23,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "What is the value of the digit 5 in 6582?",
-    "choices": [
-      "5",
-      "50",
-      "500",
-      "5000 ("
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125248.png"
-  },
-  {
-    "qid": 24,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Find the difference between 67 and 9000",
-    "choices": [
-      "8043",
-      "8932",
-      "8933",
-      "9067 ( )"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125254.png"
-  },
-  {
-    "qid": 25,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "3407=",
-    "choices": [
-      "2180",
-      "2187",
-      "2380",
-      "2387"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125259.png"
-  },
-  {
-    "qid": 26,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Amy had 67 fewer coins than Dawn at first Dawn gave 14 coins to Amy. How many fewer coins did Amy have than Dawn in the end?",
-    "choices": [
-      "39",
-      "53",
-      "81",
-      "95"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125312.png"
-  },
-  {
-    "qid": 27,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "1 Four thousand and ninety in numerals is",
-    "choices": [
-      "4900",
-      "4090",
-      "4019",
-      "490"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125336.png"
-  },
-  {
-    "qid": 28,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "2 In 9875,the value of the digit 8 is",
-    "choices": [
-      "8",
-      "80",
-      "800",
-      "8000"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125343.png"
-  },
-  {
-    "qid": 29,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "3 6132+2468=",
-    "choices": [
-      "9500",
-      "8600",
-      "8590",
-      "8500"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125351.png"
-  },
-  {
-    "qid": 30,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "4 Which of the following is arranged from the greatest to the smallest?",
-    "choices": [
-      "653635536563",
-      "536,563.635,365",
-      "365,356,563,536",
-      "653,635,563,536"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125357.png"
-  },
-  {
-    "qid": 31,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "6 3415,3625,3835 4255,4465 What is the missing number in the pattern?",
-    "choices": [
-      "3045",
-      "3845",
-      "4035",
-      "4045"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125403.png"
-  },
-  {
-    "qid": 32,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "9 How many whole numbers between 40 and 50 can be divided exactly by 6?",
+    "question": "Find the product of 7 and 8",
     "choices": [
       "1",
-      "2",
-      "3",
-      "4"
+      "15",
+      ". 54",
+      "56"
     ],
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125412.png"
-  },
-  {
-    "qid": 33,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "10Melissa finished cleaning her room at 12 00.She spent 1 hour 50 minutes cleaning without taking any break. What time did she start cleaning?.",
-    "choices": [
-      "13 50",
-      "1150",
-      "10 50",
-      "10 10"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125418.png"
-  },
-  {
-    "qid": 34,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "1In 5906, what does the digit 9 stand for?",
-    "choices": [
-      "9",
-      "90",
-      "900",
-      "9000 ("
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125513.png"
-  },
-  {
-    "qid": 35,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Express 8 km 60 m in metres.",
-    "choices": [
-      "806 m",
-      "860m",
-      "8060m",
-      "8600 m"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125519.png"
-  },
-  {
-    "qid": 36,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Alex and Faye had some files each.Alex had 34 files After Faye had given away 40 files,she had 18 files fewer than Alex What was the number of files Faye had at first?",
-    "choices": [
-      "58",
-      "56",
-      "52",
-      "50"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125531.png"
-  },
-  {
-    "qid": 37,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "What is three thousand, six hundred and six written as a numeral?",
-    "choices": [
-      "3066",
-      "3366",
-      "3606",
-      "3660"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125552.png"
-  },
-  {
-    "qid": 38,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "What is the missing number in the equation below? 7023=7000+ ? +3",
-    "choices": [
-      "203",
-      "200",
-      "23",
-      "20"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125556.png"
-  },
-  {
-    "qid": 39,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Express 2080 g in kilograms and grams",
-    "choices": [
-      "2 kg 8 g",
-      "2 kg 80 g",
-      "20 kg 8 g",
-      "20 kg 80 g 3"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125604.png"
-  },
-  {
-    "qid": 40,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "1 In 3780,the digit 7 is in the place.",
-    "choices": [
-      "ones",
-      "tens",
-      "hundreds",
-      "thousands"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125626.png"
-  },
-  {
-    "qid": 41,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "4 Write 4 kg 26 g in grams.",
-    "choices": [
-      "426 g",
-      "4026 g",
-      "4206 g",
-      "4260 g"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125634.png"
-  },
-  {
-    "qid": 42,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "9 Noah is 28 kg. Jeremy is 3 kg lighter than Noah. What is their total mass?",
-    "choices": [
-      "25 kg",
-      "31 kg",
-      "53 kg",
-      "59 kg"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125645.png"
-  },
-  {
-    "qid": 43,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "10 Zan had some stickers at first He gave 138 stickers to each of his 6 friends. He had 3 stickers left How many stickers did Zan have at first?",
-    "choices": [
-      "26",
-      "825",
-      "828",
-      "831"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125651.png"
+    "source_image": "cropped_questions\\Q004.png"
   },
   {
     "qid": 5,
@@ -637,7 +77,7 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124224.png"
+    "source_image": "cropped_questions\\Q005.png"
   },
   {
     "qid": 6,
@@ -653,7 +93,7 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124233.png"
+    "source_image": "cropped_questions\\Q006.png"
   },
   {
     "qid": 7,
@@ -669,10 +109,106 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124237.png"
+    "source_image": "cropped_questions\\Q007.png"
   },
   {
-    "qid": 18,
+    "qid": 8,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "6 tens + 9 hundreds =",
+    "choices": [
+      "69",
+      "690",
+      "906",
+      "960"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q008.png"
+  },
+  {
+    "qid": 9,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Mr Tan bought 6 loaves of bread.Each loaf is cut into 8 slices of bread. How many slices of bread did Mr Tan have altogether?",
+    "choices": [
+      "2",
+      "14",
+      "48",
+      "68"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q009.png"
+  },
+  {
+    "qid": 10,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Find the difference between 3600 and 184.",
+    "choices": [
+      "3416",
+      "3426",
+      "35.16",
+      "3584"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q010.png"
+  },
+  {
+    "qid": 11,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The sum of two numbers is 5211. The smaller number is 1979 Find the greater number.",
+    "choices": [
+      "3232",
+      "3332",
+      "4768",
+      "7190"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q011.png"
+  },
+  {
+    "qid": 12,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "What is the quotient when 525 is divided by 5?",
+    "choices": [
+      "15",
+      "105",
+      "125",
+      "150"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q012.png"
+  },
+  {
+    "qid": 13,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "How many threes are there in 2337",
+    "choices": [
+      "1",
+      "2",
+      "76",
+      "77"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q013.png"
+  },
+  {
+    "qid": 14,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "Dan has 4 boxes of balloons. There are 8 balloons'in each box. He uses 12 balloons for a party. How many balloons has he left?",
@@ -685,10 +221,394 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 124400.png"
+    "source_image": "cropped_questions\\Q014.png"
   },
   {
-    "qid": 44,
+    "qid": 15,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "4 thousands,6 hundreds and 9 ones is the same as",
+    "choices": [
+      "4069",
+      "4609",
+      "4690",
+      "4960"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q015.png"
+  },
+  {
+    "qid": 16,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "In 4012,the digit 1 is in the place.",
+    "choices": [
+      "ones",
+      "tens",
+      "hundreds",
+      "thousands"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q016.png"
+  },
+  {
+    "qid": 17,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The difference between 3600 and 1228 is",
+    "choices": [
+      "2372",
+      "2382",
+      "2482",
+      "4828"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q017.png"
+  },
+  {
+    "qid": 18,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Www.sgc^ann.con Find the product of 7 and 238.",
+    "choices": [
+      "1416",
+      "1466",
+      "1616",
+      "1666"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q018.png"
+  },
+  {
+    "qid": 19,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "What is the missing number in.the following number pattern? 236523752395 24652515",
+    "choices": [
+      "2405",
+      "2415",
+      "2425",
+      "2435"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q019.png"
+  },
+  {
+    "qid": 20,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The sum of two numbers is 400. The smaller number is 120. What is the difference between the two numbers?",
+    "choices": [
+      "160",
+      "280",
+      "520",
+      "800"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q020.png"
+  },
+  {
+    "qid": 21,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "I am a number between 20 and 40. You can find me in the multiplication tables of 6 and 8.What number am I?",
+    "choices": [
+      "24",
+      "28",
+      "30",
+      "32"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q021.png"
+  },
+  {
+    "qid": 22,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "A A X = 81 45 + A B What is the missing number represented by B",
+    "choices": [
+      "5",
+      "6",
+      "8",
+      "9"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q022.png"
+  },
+  {
+    "qid": 23,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "John saved $124 each month Tom saved 3 times as much as John each month How much would Tom save in 6 months?",
+    "choices": [
+      "$264",
+      "$372",
+      "$2232",
+      "$2976"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q023.png"
+  },
+  {
+    "qid": 24,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The length of Ribbon A is 5 times as long as Ribbon B. Ribbon B is 36 cm shorter than Ribbon A. Find the length of Ribbon A.",
+    "choices": [
+      "41 cm",
+      "45 cm",
+      "54 cm",
+      "180 cm"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q024.png"
+  },
+  {
+    "qid": 25,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "In 6893,the digit 8 stands for",
+    "choices": [
+      "8",
+      "80",
+      "800",
+      "8000 ( )"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q025.png"
+  },
+  {
+    "qid": 26,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "In 1432the digit 1 is in the place.",
+    "choices": [
+      "ones",
+      "tens",
+      "hundreds",
+      "thousands ( )"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q026.png"
+  },
+  {
+    "qid": 27,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "2 h5min= min",
+    "choices": [
+      "25",
+      "125",
+      "205",
+      "250"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q027.png"
+  },
+  {
+    "qid": 28,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Sally wants to pack 40 oranges into bags.Each bag can hold at most 6 oranges. What is the least number of bags Sally needs?",
+    "choices": [
+      "6",
+      "7",
+      "34",
+      "46"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q028.png"
+  },
+  {
+    "qid": 29,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "What is the value of the digit 5 in 6582?",
+    "choices": [
+      "5",
+      "50",
+      "500",
+      "5000 ("
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q029.png"
+  },
+  {
+    "qid": 30,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Find the difference between 67 and 9000",
+    "choices": [
+      "8043",
+      "8932",
+      "8933",
+      "9067 ( )"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q030.png"
+  },
+  {
+    "qid": 31,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "3407=",
+    "choices": [
+      "2180",
+      "2187",
+      "2380",
+      "2387"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q031.png"
+  },
+  {
+    "qid": 32,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Amy had 67 fewer coins than Dawn at first Dawn gave 14 coins to Amy. How many fewer coins did Amy have than Dawn in the end?",
+    "choices": [
+      "39",
+      "53",
+      "81",
+      "95"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q032.png"
+  },
+  {
+    "qid": 33,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "1 Four thousand and ninety in numerals is",
+    "choices": [
+      "4900",
+      "4090",
+      "4019",
+      "490"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q033.png"
+  },
+  {
+    "qid": 34,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "2 In 9875,the value of the digit 8 is",
+    "choices": [
+      "8",
+      "80",
+      "800",
+      "8000"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q034.png"
+  },
+  {
+    "qid": 35,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "3 6132+2468=",
+    "choices": [
+      "9500",
+      "8600",
+      "8590",
+      "8500"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q035.png"
+  },
+  {
+    "qid": 36,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "4 Which of the following is arranged from the greatest to the smallest?",
+    "choices": [
+      "653635536563",
+      "536,563.635,365",
+      "365,356,563,536",
+      "653,635,563,536"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q036.png"
+  },
+  {
+    "qid": 37,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "6 3415,3625,3835 4255,4465 What is the missing number in the pattern?",
+    "choices": [
+      "3045",
+      "3845",
+      "4035",
+      "4045"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q037.png"
+  },
+  {
+    "qid": 38,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "9 How many whole numbers between 40 and 50 can be divided exactly by 6?",
+    "choices": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q038.png"
+  },
+  {
+    "qid": 39,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "10Melissa finished cleaning her room at 12 00.She spent 1 hour 50 minutes cleaning without taking any break. What time did she start cleaning?.",
@@ -701,10 +621,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125418.png"
+    "source_image": "cropped_questions\\Q039.png"
   },
   {
-    "qid": 45,
+    "qid": 40,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "1In 5906, what does the digit 9 stand for?",
@@ -717,10 +637,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125513.png"
+    "source_image": "cropped_questions\\Q040.png"
   },
   {
-    "qid": 46,
+    "qid": 41,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "Express 8 km 60 m in metres.",
@@ -733,10 +653,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125519.png"
+    "source_image": "cropped_questions\\Q041.png"
   },
   {
-    "qid": 47,
+    "qid": 42,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "Alex and Faye had some files each.Alex had 34 files After Faye had given away 40 files,she had 18 files fewer than Alex What was the number of files Faye had at first?",
@@ -749,10 +669,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125531.png"
+    "source_image": "cropped_questions\\Q042.png"
   },
   {
-    "qid": 48,
+    "qid": 43,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "What is three thousand, six hundred and six written as a numeral?",
@@ -765,10 +685,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125552.png"
+    "source_image": "cropped_questions\\Q043.png"
   },
   {
-    "qid": 49,
+    "qid": 44,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "What is the missing number in the equation below? 7023=7000+ ? +3",
@@ -781,10 +701,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125556.png"
+    "source_image": "cropped_questions\\Q044.png"
   },
   {
-    "qid": 50,
+    "qid": 45,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "Express 2080 g in kilograms and grams",
@@ -797,10 +717,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125604.png"
+    "source_image": "cropped_questions\\Q045.png"
   },
   {
-    "qid": 51,
+    "qid": 46,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "1 In 3780,the digit 7 is in the place.",
@@ -813,10 +733,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125626.png"
+    "source_image": "cropped_questions\\Q046.png"
   },
   {
-    "qid": 52,
+    "qid": 47,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "4 Write 4 kg 26 g in grams.",
@@ -829,10 +749,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125634.png"
+    "source_image": "cropped_questions\\Q047.png"
   },
   {
-    "qid": 53,
+    "qid": 48,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "9 Noah is 28 kg. Jeremy is 3 kg lighter than Noah. What is their total mass?",
@@ -845,10 +765,10 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125645.png"
+    "source_image": "cropped_questions\\Q048.png"
   },
   {
-    "qid": 54,
+    "qid": 49,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "10 Zan had some stickers at first He gave 138 stickers to each of his 6 friends. He had 3 stickers left How many stickers did Zan have at first?",
@@ -861,6 +781,6 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Screenshot 2026-01-20 125651.png"
+    "source_image": "cropped_questions\\Q049.png"
   }
 ]
