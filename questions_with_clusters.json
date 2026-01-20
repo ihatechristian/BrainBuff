@@ -10,9 +10,9 @@
       "5568"
     ],
     "answer_index": 1,
-    "explanation": "10 tens is 100. Subtracting 100 from 5467 gives 4467.",
+    "explanation": "10 tens is 100. Subtracting 100 from 5467 gives 5367.",
     "cluster_id": 2,
-    "question_cluster": "cluster_which number_than"
+    "question_cluster": "cluster_which number_below is"
   },
   {
     "topic": "Place Value",
@@ -25,8 +25,8 @@
       "30"
     ],
     "answer_index": 0,
-    "explanation": "The digit 3 is in the hundreds place, so its value is 300.",
-    "cluster_id": 0,
+    "explanation": "The digit 3 is in the thousands place, so its value is 3000.",
+    "cluster_id": 1,
     "question_cluster": "number_sense_place_value"
   },
   {
@@ -41,8 +41,8 @@
     ],
     "answer_index": 2,
     "explanation": "9 thousands is 9000 and 7 tens is 70, giving a total of 9070.",
-    "cluster_id": 5,
-    "question_cluster": "number_sense_place_value"
+    "cluster_id": 3,
+    "question_cluster": "cluster_the_decimals"
   },
   {
     "topic": "Numbers",
@@ -55,9 +55,9 @@
       "6468"
     ],
     "answer_index": 2,
-    "explanation": "Adding 10 to 6467 increases the tens digit, resulting in 6477.",
+    "explanation": "Adding 10 to 6467 gives 6477.",
     "cluster_id": 2,
-    "question_cluster": "cluster_which number_than"
+    "question_cluster": "cluster_which number_below is"
   },
   {
     "topic": "Place Value",
@@ -70,8 +70,8 @@
       "4"
     ],
     "answer_index": 3,
-    "explanation": "The tens place is the second digit from the right. In 2340, it is 4 tens, represented by 4? Actually 2340 → tens digit is 4? No, ones = 0, tens = 4, hundreds = 3, thousands = 2. So the digit in the tens place is 4.",
-    "cluster_id": 0,
+    "explanation": "The tens place is the second digit from the right. In 2340, the digit in the tens place is 4.",
+    "cluster_id": 1,
     "question_cluster": "number_sense_place_value"
   },
   {
@@ -86,8 +86,8 @@
     ],
     "answer_index": 3,
     "explanation": "16 sweets × 8 boxes = 128 sweets.",
-    "cluster_id": 0,
-    "question_cluster": "number_sense_place_value"
+    "cluster_id": 5,
+    "question_cluster": "cluster_there_are"
   },
   {
     "topic": "Multiplication",
@@ -100,9 +100,9 @@
       "4 × 4 × 4 × 4 × 4"
     ],
     "answer_index": 1,
-    "explanation": "4 × 7 means adding 7 four times: 7 + 7 + 7 + 7.",
-    "cluster_id": 1,
-    "question_cluster": "measurement_mass"
+    "explanation": "4 × 7 means adding 7 four times.",
+    "cluster_id": 3,
+    "question_cluster": "cluster_the_decimals"
   },
   {
     "topic": "Division",
@@ -116,8 +116,8 @@
     ],
     "answer_index": 2,
     "explanation": "28 ÷ 4 = 7 cartons.",
-    "cluster_id": 3,
-    "question_cluster": "cluster_of milk_cartons"
+    "cluster_id": 0,
+    "question_cluster": "cluster_of_area"
   },
   {
     "topic": "Division",
@@ -130,9 +130,9 @@
       "78"
     ],
     "answer_index": 3,
-    "explanation": "66 ÷ 9 = 7 remainder 3? No. 66 = 9 × 7 + 3? Wait—correct check: 66 ÷ 9 = 7 remainder 3 ❌. 54 ÷ 9 = 6 remainder 0 ❌. 72 ÷ 9 = 8 remainder 0 ❌. 78 ÷ 9 = 8 remainder 6 ✅.",
-    "cluster_id": 1,
-    "question_cluster": "measurement_mass"
+    "explanation": "78 ÷ 9 = 8 remainder 6.",
+    "cluster_id": 0,
+    "question_cluster": "cluster_of_area"
   },
   {
     "topic": "Ratios",
@@ -145,9 +145,9 @@
       "285"
     ],
     "answer_index": 0,
-    "explanation": "Total parts = 3 + 1 = 4. 288 ÷ 4 = 72 stamps for Mary.",
+    "explanation": "288 ÷ 4 = 72.",
     "cluster_id": 4,
-    "question_cluster": "cluster_stamps_many stamps"
+    "question_cluster": "cluster_many_how"
   },
   {
     "topic": "Fractions",
@@ -160,9 +160,9 @@
       "4"
     ],
     "answer_index": 3,
-    "explanation": "1/2 = 4/8, so there are 4 eighths.",
-    "cluster_id": 3,
-    "question_cluster": "cluster_of milk_cartons"
+    "explanation": "1/2 = 4/8.",
+    "cluster_id": 4,
+    "question_cluster": "cluster_many_how"
   },
   {
     "topic": "Mass",
@@ -175,8 +175,161 @@
       "1 kg 70 g"
     ],
     "answer_index": 0,
-    "explanation": "17 kg is greater than all the other options when converted to grams.",
+    "explanation": "17 kg is the greatest.",
+    "cluster_id": 3,
+    "question_cluster": "cluster_the_decimals"
+  },
+  {
+    "topic": "Numbers",
+    "difficulty": "easy",
+    "question": "What is the value of 30 000 + 4000 + 800 + 2?",
+    "choices": [
+      "30 482",
+      "34 082",
+      "34 802",
+      "34 820"
+    ],
+    "answer_index": 2,
+    "explanation": "30 000 + 4 000 + 800 + 2 = 34 802.",
     "cluster_id": 1,
-    "question_cluster": "measurement_mass"
+    "question_cluster": "number_sense_place_value"
+  },
+  {
+    "topic": "Place Value",
+    "difficulty": "easy",
+    "question": "The value of the digit 7 in 27 905 is",
+    "choices": [
+      "70",
+      "700",
+      "7000",
+      "70 000"
+    ],
+    "answer_index": 2,
+    "explanation": "The digit 7 is in the thousands place.",
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
+  },
+  {
+    "topic": "Fractions",
+    "difficulty": "easy",
+    "question": "How many quarters are there in 3 wholes?",
+    "choices": [
+      "3/4",
+      "1 1/3",
+      "12",
+      "4"
+    ],
+    "answer_index": 2,
+    "explanation": "Each whole has 4 quarters. 3 × 4 = 12.",
+    "cluster_id": 5,
+    "question_cluster": "cluster_there_are"
+  },
+  {
+    "topic": "Decimals",
+    "difficulty": "easy",
+    "question": "Which of the following decimals is the greatest?",
+    "choices": [
+      "3.589",
+      "3.657",
+      "3.178",
+      "3.019"
+    ],
+    "answer_index": 1,
+    "explanation": "3.657 has the greatest value.",
+    "cluster_id": 3,
+    "question_cluster": "cluster_the_decimals"
+  },
+  {
+    "topic": "Decimals",
+    "difficulty": "easy",
+    "question": "Express 63/100 as a decimal.",
+    "choices": [
+      "0.063",
+      "0.603",
+      "0.63",
+      "6.03"
+    ],
+    "answer_index": 2,
+    "explanation": "63/100 = 0.63.",
+    "cluster_id": 3,
+    "question_cluster": "cluster_the_decimals"
+  },
+  {
+    "topic": "Geometry",
+    "difficulty": "medium",
+    "question": "In the figure, which two lines are perpendicular to each other?",
+    "image": "images/perpendicular_lines.png",
+    "choices": [
+      "CD and DE",
+      "CI and FG",
+      "EF and FG",
+      "GH and HI"
+    ],
+    "answer_index": 2,
+    "explanation": "EF is horizontal and FG is vertical, forming a right angle.",
+    "cluster_id": 4,
+    "question_cluster": "cluster_many_how"
+  },
+  {
+    "topic": "Area",
+    "difficulty": "easy",
+    "question": "A square cardboard has sides of length 8 cm. Find its area.",
+    "choices": [
+      "12 cm²",
+      "16 cm²",
+      "32 cm²",
+      "64 cm²"
+    ],
+    "answer_index": 3,
+    "explanation": "Area of a square = side × side = 8 × 8 = 64 cm².",
+    "cluster_id": 0,
+    "question_cluster": "cluster_of_area"
+  },
+  {
+    "topic": "Data Handling",
+    "difficulty": "easy",
+    "question": "How many students read fewer than 3 story books in that week?",
+    "image": "images/story_books_table.png",
+    "choices": [
+      "36",
+      "39",
+      "3",
+      "40"
+    ],
+    "answer_index": 0,
+    "explanation": "2 + 13 + 21 = 36 students.",
+    "cluster_id": 4,
+    "question_cluster": "cluster_many_how"
+  },
+  {
+    "topic": "Mass",
+    "difficulty": "easy",
+    "question": "Mrs Li used 1/4 kg of flour to bake brownies. She used 1/2 kg more flour to bake muffins than brownies. What was the total mass of flour she used to bake brownies and muffins?",
+    "choices": [
+      "1 kg",
+      "2/6 kg",
+      "3/4 kg",
+      "3/10 kg"
+    ],
+    "answer_index": 0,
+    "explanation": "1/4 kg + 3/4 kg = 1 kg.",
+    "cluster_id": 2,
+    "question_cluster": "cluster_which number_below is"
+  },
+  {
+    "topic": "Geometry",
+    "difficulty": "medium",
+    "question": "In the figure below, how many of the marked angles are greater than a right angle?",
+    "image": "images/angles_diagram.png",
+    "choices": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "answer_index": 2,
+    "explanation": "Three of the marked angles are obtuse.",
+    "cluster_id": 4,
+    "question_cluster": "cluster_many_how"
   }
 ]
