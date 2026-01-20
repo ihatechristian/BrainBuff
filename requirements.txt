@@ -18,5 +18,5 @@ scipy>=1.10
 numpy==1.26.4
 paddlepaddle==2.6.2
 paddleocr==2.7.3
-opencv-python>=4.8.0
+opencv-python==4.13.0.90
 Pillow>=10.0.0
