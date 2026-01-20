@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 # =========================
-# CONFIG (edit these)
+# CONFIG (edit these) hi
 # =========================
 INPUT_FOLDER = "cropped_questions"     # folder of images
 OUTPUT_JSON = "questions.json"         # output bank

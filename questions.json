@@ -622,5 +622,245 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Screenshot 2026-01-20 125651.png"
+  },
+  {
+    "qid": 5,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "3 km 5 m is the same as m.",
+    "choices": [
+      "35",
+      "305",
+      "3005",
+      "3500"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 124224.png"
+  },
+  {
+    "qid": 6,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "105 cents is the same as",
+    "choices": [
+      "$1.05",
+      "$1.50",
+      "$10.50",
+      "$105.00"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 124233.png"
+  },
+  {
+    "qid": 7,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "5X6=",
+    "choices": [
+      "5x5x5x5x5x5",
+      "5+5+5+5+5+5",
+      "5+6+5+6+5+6",
+      "6+6+6+6+6+6"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 124237.png"
+  },
+  {
+    "qid": 18,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Dan has 4 boxes of balloons. There are 8 balloons'in each box. He uses 12 balloons for a party. How many balloons has he left?",
+    "choices": [
+      "12",
+      "20",
+      "32",
+      "44 ."
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 124400.png"
+  },
+  {
+    "qid": 44,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "10Melissa finished cleaning her room at 12 00.She spent 1 hour 50 minutes cleaning without taking any break. What time did she start cleaning?.",
+    "choices": [
+      "13 50",
+      "1150",
+      "10 50",
+      "10 10"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125418.png"
+  },
+  {
+    "qid": 45,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "1In 5906, what does the digit 9 stand for?",
+    "choices": [
+      "9",
+      "90",
+      "900",
+      "9000 ("
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125513.png"
+  },
+  {
+    "qid": 46,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Express 8 km 60 m in metres.",
+    "choices": [
+      "806 m",
+      "860m",
+      "8060m",
+      "8600 m"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125519.png"
+  },
+  {
+    "qid": 47,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Alex and Faye had some files each.Alex had 34 files After Faye had given away 40 files,she had 18 files fewer than Alex What was the number of files Faye had at first?",
+    "choices": [
+      "58",
+      "56",
+      "52",
+      "50"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125531.png"
+  },
+  {
+    "qid": 48,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "What is three thousand, six hundred and six written as a numeral?",
+    "choices": [
+      "3066",
+      "3366",
+      "3606",
+      "3660"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125552.png"
+  },
+  {
+    "qid": 49,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "What is the missing number in the equation below? 7023=7000+ ? +3",
+    "choices": [
+      "203",
+      "200",
+      "23",
+      "20"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125556.png"
+  },
+  {
+    "qid": 50,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "Express 2080 g in kilograms and grams",
+    "choices": [
+      "2 kg 8 g",
+      "2 kg 80 g",
+      "20 kg 8 g",
+      "20 kg 80 g 3"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125604.png"
+  },
+  {
+    "qid": 51,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "1 In 3780,the digit 7 is in the place.",
+    "choices": [
+      "ones",
+      "tens",
+      "hundreds",
+      "thousands"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125626.png"
+  },
+  {
+    "qid": 52,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "4 Write 4 kg 26 g in grams.",
+    "choices": [
+      "426 g",
+      "4026 g",
+      "4206 g",
+      "4260 g"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125634.png"
+  },
+  {
+    "qid": 53,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "9 Noah is 28 kg. Jeremy is 3 kg lighter than Noah. What is their total mass?",
+    "choices": [
+      "25 kg",
+      "31 kg",
+      "53 kg",
+      "59 kg"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125645.png"
+  },
+  {
+    "qid": 54,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "10 Zan had some stickers at first He gave 138 stickers to each of his 6 friends. He had 3 stickers left How many stickers did Zan have at first?",
+    "choices": [
+      "26",
+      "825",
+      "828",
+      "831"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Screenshot 2026-01-20 125651.png"
   }
 ]
