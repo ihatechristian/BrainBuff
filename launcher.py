@@ -18,7 +18,7 @@ SETTINGS_PATH = PROJECT_ROOT / "settings.json"
 GAME_MAIN = PROJECT_ROOT / "demo_game" / "main.py"
 OVERLAY_MAIN = PROJECT_ROOT / "overlay_trigger.py"
 
-EDITABLE_KEYS = [
+EDITABLE_KEYS_NUMERIC = [
     "activity_window_sec",
     "low_activity_threshold",
     "high_activity_spike_threshold",
@@ -75,7 +75,7 @@ class SettingsDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.setWindowTitle("Overlay Settings")
         self.setModal(True)
-        self.setMinimumWidth(520)
+        self.setMinimumWidth(560)
 
         self.settings = load_settings()
 
@@ -89,7 +89,10 @@ class SettingsDialog(QtWidgets.QDialog):
         form.setHorizontalSpacing(16)
         form.setVerticalSpacing(10)
 
-        self.inputs: Dict[str, QtWidgets.QSpinBox] = {}
+        # numeric + dropdown inputs
+        self.spin_inputs: Dict[str, QtWidgets.QSpinBox] = {}
+        self.combo_ai: QtWidgets.QComboBox
+        self.combo_cluster: QtWidgets.QComboBox
 
         ranges = {
             "activity_window_sec": (1, 60),
@@ -107,16 +110,46 @@ class SettingsDialog(QtWidgets.QDialog):
             "cooldown_sec": "Cooldown (sec)",
             "snooze_minutes": "Snooze (minutes)",
             "max_popups_per_hour": "Max popups per hour",
+            "ai_mode": "AI mode",
+            "cluster_mode": "Cluster mode",
         }
 
-        for key in EDITABLE_KEYS:
+        # --- Spinboxes ---
+        for key in EDITABLE_KEYS_NUMERIC:
             spin = QtWidgets.QSpinBox()
             lo, hi = ranges[key]
             spin.setRange(lo, hi)
             spin.setValue(int(self.settings.get(key, 0)))
             spin.setObjectName("spin")
-            self.inputs[key] = spin
+            self.spin_inputs[key] = spin
             form.addRow(QtWidgets.QLabel(labels[key]), spin)
+
+        # --- Dropdown: ai_mode (off/on) ---
+        self.combo_ai = QtWidgets.QComboBox()
+        self.combo_ai.setObjectName("combo")
+        self.combo_ai.addItems(["off", "on"])
+        ai_cur = str(self.settings.get("ai_mode", "off")).strip().lower()
+        ai_cur = "on" if ai_cur not in ("off", "on") else ai_cur
+        ai_idx = self.combo_ai.findText(ai_cur)
+        self.combo_ai.setCurrentIndex(ai_idx if ai_idx >= 0 else 0)
+        form.addRow(QtWidgets.QLabel(labels["ai_mode"]), self.combo_ai)
+
+        # --- Dropdown: cluster_mode (off/adaptive) ---
+        self.combo_cluster = QtWidgets.QComboBox()
+        self.combo_cluster.setObjectName("combo")
+        self.combo_cluster.addItems(["off", "adaptive"])
+        cl_cur = str(self.settings.get("cluster_mode", "off")).strip().lower()
+        cl_cur = "adaptive" if cl_cur not in ("off", "adaptive") else cl_cur
+        cl_idx = self.combo_cluster.findText(cl_cur)
+        self.combo_cluster.setCurrentIndex(cl_idx if cl_idx >= 0 else 0)
+        form.addRow(QtWidgets.QLabel(labels["cluster_mode"]), self.combo_cluster)
+
+        hint = QtWidgets.QLabel(
+            "Note: AI mode 'on' just enables the AI feature flag. "
+            "Your QuestionEngine decides whether it uses cache/live based on your implementation."
+        )
+        hint.setObjectName("dlgHint")
+        hint.setWordWrap(True)
 
         btn_cancel = QtWidgets.QPushButton("Cancel")
         btn_save = QtWidgets.QPushButton("Save")
@@ -136,11 +169,13 @@ class SettingsDialog(QtWidgets.QDialog):
 
         layout = QtWidgets.QVBoxLayout(card)
         layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(10)
         layout.addWidget(title)
         layout.addWidget(subtitle)
-        layout.addSpacing(8)
+        layout.addSpacing(6)
         layout.addLayout(form)
-        layout.addSpacing(10)
+        layout.addWidget(hint)
+        layout.addSpacing(6)
         layout.addLayout(btn_row)
 
         outer = QtWidgets.QVBoxLayout(self)
@@ -150,8 +185,14 @@ class SettingsDialog(QtWidgets.QDialog):
         self.setStyleSheet(DIALOG_QSS)
 
     def save(self):
-        for key, widget in self.inputs.items():
+        # numeric fields
+        for key, widget in self.spin_inputs.items():
             self.settings[key] = int(widget.value())
+
+        # dropdown fields (exact values you requested)
+        self.settings["ai_mode"] = self.combo_ai.currentText().strip().lower()          # off/on
+        self.settings["cluster_mode"] = self.combo_cluster.currentText().strip().lower()  # off/adaptive
+
         save_settings(self.settings)
         self.accept()
 
@@ -241,7 +282,6 @@ class Launcher(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(self, "Error", "Game not found.")
             return
 
-        # If already running, don’t start another
         if self.game_proc is not None and self.game_proc.poll() is None:
             QtWidgets.QMessageBox.information(self, "Game Running", "Game is already running.")
             return
@@ -256,7 +296,6 @@ class Launcher(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(self, "Error", "overlay_trigger.py not found.")
             return
 
-        # If already running, don’t start another
         if self.overlay_proc is not None and self.overlay_proc.poll() is None:
             QtWidgets.QMessageBox.information(self, "Overlay Running", "Overlay is already running.")
             return
@@ -267,7 +306,6 @@ class Launcher(QtWidgets.QWidget):
         )
 
     def quit_everything(self):
-        # Stop overlay + game, then close launcher
         terminate_process(self.overlay_proc, "overlay")
         terminate_process(self.game_proc, "game")
         self.overlay_proc = None
@@ -275,7 +313,6 @@ class Launcher(QtWidgets.QWidget):
         QtWidgets.QApplication.quit()
 
     def closeEvent(self, event):
-        # If user clicks the window X, also stop everything
         self.quit_everything()
         event.accept()
 
@@ -358,6 +395,30 @@ DIALOG_QSS = """
 #dlgSub {
     color: rgba(229, 231, 235, 0.70);
     font-size: 12px;
+}
+
+#dlgHint {
+    color: rgba(229, 231, 235, 0.55);
+    font-size: 11px;
+    margin-top: 6px;
+}
+
+QComboBox#combo {
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.10);
+    color: #E5E7EB;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+QComboBox#combo::drop-down {
+    border: none;
+}
+
+QComboBox#combo QAbstractItemView {
+    background: #111827;
+    color: #E5E7EB;
+    selection-background-color: rgba(59, 130, 246, 0.35);
 }
 """
 
