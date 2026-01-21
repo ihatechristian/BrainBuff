@@ -4,7 +4,7 @@
   "high_activity_spike_threshold": 40,
   "cooldown_sec": 10,
   "snooze_minutes": 3,
-  "max_popups_per_hour": 9999,
+  "max_popups_per_hour": 9998,
   "ai_mode": "off",
   "ai_grade_level": "Primary 3–6",
   "ai_difficulty": "easy",
