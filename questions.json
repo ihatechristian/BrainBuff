@@ -632,57 +632,6 @@
     "qid": 38,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "1In 5906, what does the digit 9 stand for? _____",
-    "choices": [
-      "9 (2) 90",
-      "[UNREADABLE]",
-      "900 (4) 9000",
-      "[UNREADABLE]"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Q038.png",
-    "needs_review": true
-  },
-  {
-    "qid": 39,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Express 8 km 60 m in metres.",
-    "choices": [
-      "806 m (2) 860m",
-      "[UNREADABLE]",
-      "8060m 4) 8600 m",
-      "[UNREADABLE]"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Q039.png",
-    "needs_review": true
-  },
-  {
-    "qid": 40,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "Alex and Faye had some files each.Alex had 34 files After Faye had given away 40 files,she had 18 files fewer than Alex What was the number of files Faye had at first?",
-    "choices": [
-      "58 (2) 56",
-      "[UNREADABLE]",
-      "52 (4) 50",
-      "[UNREADABLE]"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Q040.png",
-    "needs_review": true
-  },
-  {
-    "qid": 41,
-    "topic": "PSLE",
-    "difficulty": "easy",
     "question": "What is three thousand, six hundred and six written as a numeral?",
     "choices": [
       "3066",
@@ -693,28 +642,11 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Q041.png",
+    "source_image": "cropped_questions\\Q038.png",
     "needs_review": false
   },
   {
-    "qid": 42,
-    "topic": "PSLE",
-    "difficulty": "easy",
-    "question": "What is the missing number in the equation below? 7023=7000+ ? _____ +3",
-    "choices": [
-      "203",
-      "200",
-      "23",
-      "20"
-    ],
-    "answer_index": -1,
-    "explanation": "",
-    "image": null,
-    "source_image": "cropped_questions\\Q042.png",
-    "needs_review": false
-  },
-  {
-    "qid": 43,
+    "qid": 39,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "Express 2080 g in kilograms and grams",
@@ -727,11 +659,11 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Q043.png",
+    "source_image": "cropped_questions\\Q039.png",
     "needs_review": false
   },
   {
-    "qid": 44,
+    "qid": 40,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "1 In 3780,the digit 7 is in the _____ place.",
@@ -744,11 +676,11 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Q044.png",
+    "source_image": "cropped_questions\\Q040.png",
     "needs_review": false
   },
   {
-    "qid": 45,
+    "qid": 41,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "4 Write 4 kg 26 g in grams.",
@@ -761,11 +693,11 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Q045.png",
+    "source_image": "cropped_questions\\Q041.png",
     "needs_review": false
   },
   {
-    "qid": 46,
+    "qid": 42,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "9 Noah is 28 kg. Jeremy is 3 kg lighter than Noah. What is their total mass?",
@@ -778,11 +710,11 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Q046.png",
+    "source_image": "cropped_questions\\Q042.png",
     "needs_review": false
   },
   {
-    "qid": 47,
+    "qid": 43,
     "topic": "PSLE",
     "difficulty": "easy",
     "question": "10 Zan had some stickers at first He gave 138 stickers to each of his 6 friends. He had 3 stickers left How many stickers did Zan have at first?",
@@ -795,7 +727,7 @@
     "answer_index": -1,
     "explanation": "",
     "image": null,
-    "source_image": "cropped_questions\\Q047.png",
+    "source_image": "cropped_questions\\Q043.png",
     "needs_review": false
   }
 ]
