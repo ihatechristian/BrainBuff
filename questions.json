@@ -14,18 +14,16 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q001.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 2,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "3 groups of = 4 x 9",
+    "question": "3 groups of _____ = 4 x 9",
     "choices": [
-      "1",
-      "12 ...",
+      "1 ... (2) 12",
+      "[UNREADABLE]",
       "3",
       "36"
     ],
@@ -33,15 +31,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q002.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": true
   },
   {
     "qid": 3,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "In 8371, the digit 3 is in the place.",
+    "question": "In 8371, the digit 3 is in the _____ place.",
     "choices": [
       "ones",
       "tens",
@@ -52,9 +48,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q003.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 4,
@@ -71,15 +65,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q004.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 5,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "3 km 5 m is the same as m.",
+    "question": "3 km 5 m is the same as _____ m.",
     "choices": [
       "35",
       "305",
@@ -90,15 +82,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q005.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 6,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "105 cents is the same as",
+    "question": "105 cents is the same as _____",
     "choices": [
       "$1.05",
       "$1.50",
@@ -109,9 +99,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q006.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 7,
@@ -128,15 +116,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q007.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 8,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "6 tens + 9 hundreds =",
+    "question": "6 tens + 9 hundreds = _____",
     "choices": [
       "69",
       "690",
@@ -147,9 +133,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q008.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 9,
@@ -166,9 +150,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q009.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 10,
@@ -185,9 +167,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q010.png",
-    "needs_review": false,
-    "cluster_id": 5,
-    "question_cluster": "cluster_between_the difference"
+    "needs_review": false
   },
   {
     "qid": 11,
@@ -204,9 +184,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q011.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 12,
@@ -223,9 +201,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q012.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 13,
@@ -242,9 +218,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q013.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 14,
@@ -261,15 +235,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q014.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 15,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "4 thousands,6 hundreds and 9 ones is the same as",
+    "question": "4 thousands,6 hundreds and 9 ones is the same as _____",
     "choices": [
       "4069",
       "4609",
@@ -280,15 +252,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q015.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 16,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "In 4012,the digit 1 is in the place.",
+    "question": "In 4012,the digit 1 is in the _____ place.",
     "choices": [
       "ones",
       "tens",
@@ -299,15 +269,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q016.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 17,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "The difference between 3600 and 1228 is",
+    "question": "The difference between 3600 and 1228 is _____",
     "choices": [
       "2372",
       "2382",
@@ -318,15 +286,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q017.png",
-    "needs_review": false,
-    "cluster_id": 5,
-    "question_cluster": "cluster_between_the difference"
+    "needs_review": false
   },
   {
     "qid": 18,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "What is the missing number in.the following number pattern? 236523752395 24652515",
+    "question": "What is the missing number in.the following number pattern? 236523752395 _____ 24652515",
     "choices": [
       "2405",
       "2415",
@@ -337,9 +303,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q018.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 19,
@@ -356,9 +320,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q019.png",
-    "needs_review": false,
-    "cluster_id": 5,
-    "question_cluster": "cluster_between_the difference"
+    "needs_review": false
   },
   {
     "qid": 20,
@@ -375,9 +337,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q020.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 21,
@@ -394,9 +354,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q021.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 22,
@@ -413,53 +371,47 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q022.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 23,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "In 6893,the digit 8 stands for",
+    "question": "In 6893,the digit 8 stands for _____",
     "choices": [
       "8",
       "80",
       "800",
-      "8000 )"
+      "8000 ( )"
     ],
     "answer_index": -1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q023.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 24,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "In 1432the digit 1 is in the place.",
+    "question": "In 1432the digit 1 is in the _____ place.",
     "choices": [
       "ones",
       "tens",
       "hundreds",
-      "thousands )"
+      "thousands ( )"
     ],
     "answer_index": -1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q024.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 25,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "2 h5min= min",
+    "question": "2 h5min= _____ min",
     "choices": [
       "25",
       "125",
@@ -470,9 +422,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q025.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 26,
@@ -489,9 +439,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q026.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 27,
@@ -508,9 +456,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q027.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 28,
@@ -521,21 +467,19 @@
       "8043",
       "8932",
       "8933",
-      "9067 )"
+      "9067 ( )"
     ],
     "answer_index": -1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q028.png",
-    "needs_review": false,
-    "cluster_id": 5,
-    "question_cluster": "cluster_between_the difference"
+    "needs_review": false
   },
   {
     "qid": 29,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "3407=",
+    "question": "3407= _____",
     "choices": [
       "2180",
       "2187",
@@ -546,9 +490,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q029.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 30,
@@ -565,9 +507,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q030.png",
-    "needs_review": false,
-    "cluster_id": 3,
-    "question_cluster": "cluster_had_stickers"
+    "needs_review": false
   },
   {
     "qid": 31,
@@ -584,9 +524,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q031.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 32,
@@ -603,15 +541,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q032.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 33,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "3 6132+2468=",
+    "question": "3 6132+2468= _____",
     "choices": [
       "9500",
       "8600",
@@ -622,9 +558,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q033.png",
-    "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "needs_review": false
   },
   {
     "qid": 34,
@@ -641,15 +575,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q034.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 35,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "6 3415,3625,3835 4255,4465 What is the missing number in the pattern?",
+    "question": "6 3415,3625,3835 _____ 4255,4465 What is the missing number in the pattern?",
     "choices": [
       "3045",
       "3845",
@@ -660,9 +592,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q035.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 36,
@@ -679,9 +609,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q036.png",
-    "needs_review": false,
-    "cluster_id": 5,
-    "question_cluster": "cluster_between_the difference"
+    "needs_review": false
   },
   {
     "qid": 37,
@@ -698,28 +626,24 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q037.png",
-    "needs_review": false,
-    "cluster_id": 3,
-    "question_cluster": "cluster_had_stickers"
+    "needs_review": false
   },
   {
     "qid": 38,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "1In 5906, what does the digit 9 stand for?",
+    "question": "1In 5906, what does the digit 9 stand for? _____",
     "choices": [
-      "9",
-      "90",
-      "900",
-      "9000"
+      "9 (2) 90",
+      "[UNREADABLE]",
+      "900 (4) 9000",
+      "[UNREADABLE]"
     ],
     "answer_index": -1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q038.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": true
   },
   {
     "qid": 39,
@@ -727,18 +651,16 @@
     "difficulty": "easy",
     "question": "Express 8 km 60 m in metres.",
     "choices": [
-      "806 m",
-      "860m",
-      "8060m",
-      "8600 m"
+      "806 m (2) 860m",
+      "[UNREADABLE]",
+      "8060m 4) 8600 m",
+      "[UNREADABLE]"
     ],
     "answer_index": -1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q039.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": true
   },
   {
     "qid": 40,
@@ -746,18 +668,16 @@
     "difficulty": "easy",
     "question": "Alex and Faye had some files each.Alex had 34 files After Faye had given away 40 files,she had 18 files fewer than Alex What was the number of files Faye had at first?",
     "choices": [
-      "58",
-      "56",
-      "52",
-      "50"
+      "58 (2) 56",
+      "[UNREADABLE]",
+      "52 (4) 50",
+      "[UNREADABLE]"
     ],
     "answer_index": -1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q040.png",
-    "needs_review": false,
-    "cluster_id": 3,
-    "question_cluster": "cluster_had_stickers"
+    "needs_review": true
   },
   {
     "qid": 41,
@@ -774,15 +694,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q041.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 42,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "What is the missing number in the equation below? 7023=7000+ ? +3",
+    "question": "What is the missing number in the equation below? 7023=7000+ ? _____ +3",
     "choices": [
       "203",
       "200",
@@ -793,9 +711,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q042.png",
-    "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_the_is"
+    "needs_review": false
   },
   {
     "qid": 43,
@@ -812,15 +728,13 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q043.png",
-    "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "measurement_mass"
+    "needs_review": false
   },
   {
     "qid": 44,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "1 In 3780,the digit 7 is in the place.",
+    "question": "1 In 3780,the digit 7 is in the _____ place.",
     "choices": [
       "ones",
       "tens",
@@ -831,9 +745,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q044.png",
-    "needs_review": false,
-    "cluster_id": 2,
-    "question_cluster": "number_sense_place_value"
+    "needs_review": false
   },
   {
     "qid": 45,
@@ -850,9 +762,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q045.png",
-    "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "measurement_mass"
+    "needs_review": false
   },
   {
     "qid": 46,
@@ -869,9 +779,7 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q046.png",
-    "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "measurement_mass"
+    "needs_review": false
   },
   {
     "qid": 47,
@@ -888,8 +796,6 @@
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q047.png",
-    "needs_review": false,
-    "cluster_id": 3,
-    "question_cluster": "cluster_had_stickers"
+    "needs_review": false
   }
 ]

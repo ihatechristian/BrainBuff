@@ -1,11 +1,21 @@
 # ingest_question_folder_gui_free.py
+# ---------------------------------
+# Ingest a folder of question images -> questions.json
+# ✅ Preserves blanks like "____" by:
+#   1) Keeping OCR underscore tokens (many OCRs drop them, but if present we keep)
+#   2) Detecting drawn underline blanks in the image (OpenCV) and inserting "_____"
+#      into the closest OCR text line at the correct x-position.
+#
+# Requirements: paddleocr, paddlepaddle, opencv-python
+#
 import json
 import os
 import re
 import sys
+import time
 import warnings
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 
 # =========================
 # CONFIG (edit these)
@@ -33,22 +43,33 @@ QUIET_PADDLE = True
 # --- Robustness ---
 ALLOW_INCOMPLETE_CHOICES = True        # if OCR misses an option, don't crash
 MISSING_CHOICE_PLACEHOLDER = "[UNREADABLE]"
+
+# --- Blank (underline) detection tuning ---
+# If your blanks are NOT detected, lower WIDTH_RATIO and ASPECT slightly.
+# If too many false positives, raise them.
+MIN_UNDERLINE_WIDTH_RATIO = 0.05       # underline must be >= 5% of image width
+MIN_UNDERLINE_WIDTH_PX = 25            # also must be at least this many pixels
+MIN_UNDERLINE_ASPECT = 3.0             # width/height (thin horizontal)
+MAX_UNDERLINE_HEIGHT_PX = 18           # ignore thick rectangles
+MAX_GAP_TO_MERGE_PX = 40               # merge broken underline segments if gap <= this
+MAX_Y_DIFF_TO_MERGE_PX = 10            # merge segments if vertical centers close
+BLANK_TOKEN = "_____"                  # what to insert into question text
 # =========================
 
 LEADING_QNUM_RE = re.compile(r"^\s*(?:Q\s*)?\d{1,4}\s*[.)]\s*")
 FILENAME_QID_RE = re.compile(r"(?:^|[^0-9])(?:Q)?(\d{1,6})(?:[^0-9]|$)", re.IGNORECASE)
 IMG_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}
 
-# Match option markers anywhere in a line: (2) or [2] or 2)
-OPT_ANY_RE = re.compile(r"(\(\s*[1-4]\s*\)|\[\s*[1-4]\s*\]|(?:^|\s)([1-4])\))")
+# Detect option markers in text lines
+OPT_LINE_RE = re.compile(r"^\s*[\(\[]?\s*([1-4])\s*[\)\]]\s*(.*)$")
 
 # Global OCR instance
 _OCR = None
 
 
 class _NullWriter:
-    def write(self, *_args, **_kwargs): pass
-    def flush(self): pass
+    def write(self, *_args, **_kwargs): ...
+    def flush(self): ...
 
 
 def _silence_paddle_logs(enable: bool):
@@ -73,49 +94,6 @@ def _make_ocr():
         return PaddleOCR(lang="en", use_angle_cls=True)
 
 
-def ocr_image_lines(img_path: str) -> List[str]:
-    """
-    OCR the image and return ordered lines.
-    (Using text-only lines here; if you want blank-detection from gaps, we can re-add it later.)
-    """
-    global _OCR
-    import cv2
-
-    if _OCR is None:
-        _silence_paddle_logs(QUIET_PADDLE)
-        if QUIET_PADDLE:
-            old_out, old_err = sys.stdout, sys.stderr
-            sys.stdout, sys.stderr = _NullWriter(), _NullWriter()
-            try:
-                _OCR = _make_ocr()
-            finally:
-                sys.stdout, sys.stderr = old_out, old_err
-        else:
-            _OCR = _make_ocr()
-
-    img = cv2.imread(img_path)
-    if img is None:
-        raise RuntimeError(f"Could not read image: {img_path}")
-
-    try:
-        result = _OCR.ocr(img)
-    except Exception:
-        result = _OCR.ocr(img_path)
-
-    lines: List[str] = []
-    if result and isinstance(result, list):
-        blocks = result[0] if (len(result) == 1 and isinstance(result[0], list)) else result
-        for block in blocks:
-            try:
-                text = block[1][0]
-                if text and str(text).strip():
-                    lines.append(str(text).strip())
-            except Exception:
-                continue
-
-    return lines
-
-
 def qid_from_filename(stem: str) -> Optional[int]:
     m = FILENAME_QID_RE.search(stem)
     if not m:
@@ -124,145 +102,6 @@ def qid_from_filename(stem: str) -> Optional[int]:
         return int(m.group(1))
     except Exception:
         return None
-
-
-def _clean_stem_line(ln: str) -> str:
-    ln = LEADING_QNUM_RE.sub("", ln).strip()
-    ln = re.sub(r"\s+", " ", ln).strip()
-    return ln
-
-
-def _clean_choice_text(txt: str) -> str:
-    t = (txt or "").strip()
-    t = re.sub(r"\s+", " ", t).strip()
-    # remove stray "(" at end (common OCR artifact)
-    t = re.sub(r"\(\s*$", "", t).strip()
-    return t
-
-
-def _opt_num_from_token(tok: str) -> Optional[int]:
-    # tok could be "(2)" or "[2]" or "2)"
-    digits = re.findall(r"[1-4]", tok)
-    if not digits:
-        return None
-    try:
-        return int(digits[0])
-    except Exception:
-        return None
-
-
-def _split_multiple_options_in_line(raw: str) -> List[Tuple[int, str]]:
-    """
-    Handles cases like:
-      "1 ... (2) 12"  -> [(1, "..."), (2, "12")]
-      "(1) 1 (2) 12"  -> [(1,"1"), (2,"12")]
-      "1) 7 2) 9"     -> [(1,"7"), (2,"9")] (rare)
-    """
-    s = (raw or "").strip()
-    if not s:
-        return []
-
-    # Find any option markers (including ones in middle)
-    matches = list(re.finditer(r"\(\s*[1-4]\s*\)|\[\s*[1-4]\s*\]|\b[1-4]\)", s))
-    if not matches:
-        return []
-
-    chunks: List[Tuple[int, str]] = []
-    for i, m in enumerate(matches):
-        tok = m.group(0)
-        n = _opt_num_from_token(tok)
-        if n is None:
-            continue
-        start = m.end()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(s)
-        txt = s[start:end].strip()
-        chunks.append((n, txt))
-
-    # Special case: OCR sometimes drops "(" so line begins with "1 ... (2) 12"
-    # If the line starts with a bare digit 1-4 AND we also found later markers,
-    # treat the first digit as option 1 marker.
-    if chunks and re.match(r"^\s*[1-4]\b", s) and not re.match(r"^\s*\(\s*[1-4]\s*\)|^\s*\[\s*[1-4]\s*\]|^\s*[1-4]\)", s):
-        first_num = int(re.match(r"^\s*([1-4])\b", s).group(1))
-        # text from after that digit up to first matched token
-        prefix_end = matches[0].start()
-        prefix_txt = s[1:prefix_end].strip()
-        chunks = [(first_num, prefix_txt)] + chunks
-
-    return chunks
-
-
-def parse_question(lines: List[str]) -> Tuple[str, List[str], bool]:
-    """
-    Returns (stem, choices[4], needs_review)
-    """
-    stem_parts: List[str] = []
-    choices = ["", "", "", ""]
-    needs_review = False
-
-    opt_started = False
-    last_touched_opt: Optional[int] = None
-
-    for ln in lines:
-        raw = (ln or "").strip()
-        if not raw:
-            continue
-
-        # Multi-option split if present
-        multi = _split_multiple_options_in_line(raw)
-        if multi:
-            opt_started = True
-            for opt_num, txt in multi:
-                idx = opt_num - 1
-                txt = _clean_choice_text(txt)
-                if txt:
-                    choices[idx] = txt
-                else:
-                    # leave blank for now; we'll fill later if allowed
-                    pass
-                last_touched_opt = idx
-            continue
-
-        # Single option at start: (1) ..., [1] ..., 1) ...
-        m = re.match(r"^\s*[\(\[]?\s*([1-4])\s*[\)\]]\s*(.*)$", raw)
-        if m and (raw.strip().startswith("(") or raw.strip().startswith("[") or raw.strip().startswith(("1)", "2)", "3)", "4)"))):
-            opt_started = True
-            opt_num = int(m.group(1))
-            idx = opt_num - 1
-            txt = _clean_choice_text(m.group(2) or "")
-            if txt:
-                choices[idx] = txt
-            last_touched_opt = idx
-            continue
-
-        if not opt_started:
-            cleaned = _clean_stem_line(raw)
-            if cleaned:
-                stem_parts.append(cleaned)
-        else:
-            # wrap lines continuing the last option
-            if last_touched_opt is None:
-                last_touched_opt = 0
-            extra = _clean_choice_text(raw)
-            if extra:
-                if choices[last_touched_opt]:
-                    choices[last_touched_opt] = (choices[last_touched_opt] + " " + extra).strip()
-                else:
-                    choices[last_touched_opt] = extra
-
-    stem = " ".join(stem_parts).strip()
-    stem = re.sub(r"\s+", " ", stem).strip()
-
-    if not stem:
-        raise ValueError("Could not parse question stem from OCR.")
-
-    # If any choices missing, either fail or mark review
-    if any(not c.strip() for c in choices):
-        if not ALLOW_INCOMPLETE_CHOICES:
-            raise ValueError(f"Could not parse all 4 choices. Got: {choices}")
-        needs_review = True
-        choices = [c.strip() if c.strip() else MISSING_CHOICE_PLACEHOLDER for c in choices]
-
-    return stem, choices, needs_review
 
 
 def load_json_list(path: str):
@@ -316,6 +155,326 @@ def rename_image_file(img_file: Path, qid: int) -> Path:
         return img_file
 
 
+# -------------------------
+# Underline (blank) detection
+# -------------------------
+def detect_underlines(img_bgr) -> List[Tuple[int, int, int]]:
+    """
+    Returns list of (x1, x2, y_center) for detected underline blanks.
+    Robust to broken segments (merges close pieces).
+    """
+    import cv2
+    import numpy as np
+
+    h, w = img_bgr.shape[:2]
+    min_w = max(MIN_UNDERLINE_WIDTH_PX, int(w * float(MIN_UNDERLINE_WIDTH_RATIO)))
+
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+
+    # Invert so strokes become white (helps morphology)
+    thr = cv2.adaptiveThreshold(
+        gray, 255,
+        cv2.ADAPTIVE_THRESH_MEAN_C,
+        cv2.THRESH_BINARY_INV,
+        35, 12
+    )
+
+    # Remove small noise
+    thr = cv2.medianBlur(thr, 3)
+
+    # Horizontal line emphasis
+    kernel_w = max(20, int(w * 0.06))
+    horiz = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_w, 1))
+    lines = cv2.morphologyEx(thr, cv2.MORPH_OPEN, horiz, iterations=1)
+
+    # Slight dilation helps connect tiny breaks
+    lines = cv2.dilate(lines, cv2.getStructuringElement(cv2.MORPH_RECT, (9, 1)), iterations=1)
+
+    contours, _ = cv2.findContours(lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    candidates: List[Tuple[int, int, int, int]] = []  # x,y,w,h
+    for c in contours:
+        x, y, ww, hh = cv2.boundingRect(c)
+        if ww < min_w:
+            continue
+        if hh > MAX_UNDERLINE_HEIGHT_PX:
+            continue
+        aspect = ww / max(1, hh)
+        if aspect < MIN_UNDERLINE_ASPECT:
+            continue
+        candidates.append((x, y, ww, hh))
+
+    # Merge segments that are on the same y-level and close in x
+    candidates.sort(key=lambda t: (t[1] + t[3] // 2, t[0]))
+    merged: List[Tuple[int, int, int, int]] = []
+
+    for x, y, ww, hh in candidates:
+        yc = y + hh // 2
+        if not merged:
+            merged.append((x, y, ww, hh))
+            continue
+
+        mx, my, mww, mhh = merged[-1]
+        myc = my + mhh // 2
+        gap = x - (mx + mww)
+
+        if abs(yc - myc) <= MAX_Y_DIFF_TO_MERGE_PX and gap <= MAX_GAP_TO_MERGE_PX:
+            # merge into last
+            nx = mx
+            ny = min(my, y)
+            nx2 = max(mx + mww, x + ww)
+            ny2 = max(my + mhh, y + hh)
+            merged[-1] = (nx, ny, nx2 - nx, ny2 - ny)
+        else:
+            merged.append((x, y, ww, hh))
+
+    out: List[Tuple[int, int, int]] = []
+    for x, y, ww, hh in merged:
+        out.append((x, x + ww, y + hh // 2))
+    return out
+
+
+# -------------------------
+# OCR with boxes -> line rebuild + blank insertion
+# -------------------------
+def ocr_tokens_with_boxes(img_path: str) -> Tuple[List[Tuple[str, float, float, float, float]], Tuple[int, int]]:
+    """
+    Returns tokens: (text, x1, x2, y1, y2) and image (w,h).
+    """
+    global _OCR
+    import cv2
+
+    if _OCR is None:
+        _silence_paddle_logs(QUIET_PADDLE)
+        if QUIET_PADDLE:
+            old_out, old_err = sys.stdout, sys.stderr
+            sys.stdout, sys.stderr = _NullWriter(), _NullWriter()
+            try:
+                _OCR = _make_ocr()
+            finally:
+                sys.stdout, sys.stderr = old_out, old_err
+        else:
+            _OCR = _make_ocr()
+
+    img = cv2.imread(img_path)
+    if img is None:
+        raise RuntimeError(f"Could not read image: {img_path}")
+
+    h, w = img.shape[:2]
+
+    try:
+        result = _OCR.ocr(img)
+    except Exception:
+        result = _OCR.ocr(img_path)
+
+    tokens: List[Tuple[str, float, float, float, float]] = []
+    if result and isinstance(result, list):
+        blocks = result[0] if (len(result) == 1 and isinstance(result[0], list)) else result
+        for block in blocks:
+            try:
+                box = block[0]          # 4 points
+                text = str(block[1][0]) # (text, conf)
+                if not text:
+                    continue
+
+                # keep underscores; just trim edges
+                text = text.strip()
+                if not text:
+                    continue
+
+                xs = [p[0] for p in box]
+                ys = [p[1] for p in box]
+                x1, x2 = float(min(xs)), float(max(xs))
+                y1, y2 = float(min(ys)), float(max(ys))
+                tokens.append((text, x1, x2, y1, y2))
+            except Exception:
+                continue
+
+    return tokens, (w, h)
+
+
+def rebuild_lines_and_insert_blanks(img_path: str) -> List[str]:
+    """
+    Build clean OCR lines using box positions and insert BLANK_TOKEN
+    where underline blanks are detected (by x position).
+    """
+    import cv2
+
+    tokens, (w, h) = ocr_tokens_with_boxes(img_path)
+    img = cv2.imread(img_path)
+
+    underlines = detect_underlines(img) if img is not None else []
+
+    # No tokens fallback
+    if not tokens:
+        # if we still have underlines, just return one line with blanks
+        return [BLANK_TOKEN] if underlines else []
+
+    # Cluster tokens into lines by y-center
+    # dynamic tolerance based on image height
+    line_tol = max(10, int(h * 0.018))
+
+    # Each line: {"yc": float, "tokens":[(text,x_center,x1,x2)]}
+    lines: List[Dict[str, object]] = []
+    for text, x1, x2, y1, y2 in sorted(tokens, key=lambda t: ((t[3] + t[4]) / 2, t[1])):
+        yc = (y1 + y2) / 2.0
+        xc = (x1 + x2) / 2.0
+
+        placed = False
+        for L in lines:
+            if abs(yc - float(L["yc"])) <= line_tol:
+                # update running yc
+                L["yc"] = (float(L["yc"]) * 0.85) + (yc * 0.15)
+                cast = L["tokens"]  # type: ignore
+                cast.append((text, xc, x1, x2))  # type: ignore
+                placed = True
+                break
+
+        if not placed:
+            lines.append({"yc": yc, "tokens": [(text, xc, x1, x2)]})
+
+    # Sort tokens inside each line by x
+    for L in lines:
+        L["tokens"] = sorted(L["tokens"], key=lambda t: t[1])  # type: ignore
+
+    # Insert blanks into nearest line by y, at x-position among tokens
+    for x1, x2, yc in underlines:
+        # pick closest line by y
+        best_i = None
+        best_d = 1e18
+        for i, L in enumerate(lines):
+            d = abs(yc - float(L["yc"]))
+            if d < best_d:
+                best_d = d
+                best_i = i
+        if best_i is None:
+            continue
+
+        L = lines[best_i]
+        toks = list(L["tokens"])  # type: ignore
+
+        # If this line already contains underscores, don't double insert
+        joined = " ".join([t[0] for t in toks])
+        if "__" in joined:
+            continue
+
+        blank_xc = (x1 + x2) / 2.0
+
+        # Find insertion point by x-center
+        ins = 0
+        while ins < len(toks) and toks[ins][1] < blank_xc:
+            ins += 1
+
+        # Avoid inserting multiple blanks at same spot
+        if ins > 0 and toks[ins - 1][0] == BLANK_TOKEN:
+            continue
+        if ins < len(toks) and toks[ins][0] == BLANK_TOKEN:
+            continue
+
+        toks.insert(ins, (BLANK_TOKEN, blank_xc, float(x1), float(x2)))
+        L["tokens"] = toks  # type: ignore
+
+    # Convert lines back to text
+    out_lines: List[str] = []
+    for L in sorted(lines, key=lambda d: float(d["yc"])):  # type: ignore
+        toks = L["tokens"]  # type: ignore
+        # normalize underscore sequences found in OCR text
+        parts = []
+        for t in toks:
+            s = t[0]
+            # If OCR gave "__" or "___", standardize
+            if re.search(r"_{2,}", s):
+                s = BLANK_TOKEN
+            parts.append(s)
+        line = " ".join(parts).strip()
+        line = re.sub(r"\s+", " ", line).strip()
+        if line:
+            out_lines.append(line)
+
+    return out_lines
+
+
+# -------------------------
+# Parsing into stem + 4 choices
+# -------------------------
+def _clean_stem_line(ln: str) -> str:
+    # Keep underscores; just remove leading question numbering and normalize spaces
+    ln = LEADING_QNUM_RE.sub("", ln).strip()
+    ln = re.sub(r"\s+", " ", ln).strip()
+    return ln
+
+
+def _clean_choice_text(txt: str) -> str:
+    t = (txt or "").strip()
+    t = re.sub(r"\s+", " ", t).strip()
+    t = re.sub(r"\(\s*$", "", t).strip()
+    return t
+
+
+def parse_question(lines: List[str]) -> Tuple[str, List[str], bool]:
+    """
+    Returns (stem, choices[4], needs_review)
+    """
+    stem_parts: List[str] = []
+    choices = ["", "", "", ""]
+    needs_review = False
+
+    opt_started = False
+    last_opt: Optional[int] = None
+
+    for ln in lines:
+        raw = (ln or "").strip()
+        if not raw:
+            continue
+
+        m = OPT_LINE_RE.match(raw)
+        if m:
+            # treat as option line only if it looks like "(1) ..." or "1) ..."
+            opt_num = int(m.group(1))
+            idx = opt_num - 1
+            txt = _clean_choice_text(m.group(2) or "")
+            choices[idx] = txt
+            opt_started = True
+            last_opt = idx
+            continue
+
+        if not opt_started:
+            cleaned = _clean_stem_line(raw)
+            if cleaned:
+                stem_parts.append(cleaned)
+        else:
+            # wrapped line continues last option
+            if last_opt is None:
+                last_opt = 0
+            extra = _clean_choice_text(raw)
+            if extra:
+                if choices[last_opt]:
+                    choices[last_opt] = (choices[last_opt] + " " + extra).strip()
+                else:
+                    choices[last_opt] = extra
+
+    stem = " ".join(stem_parts).strip()
+    stem = re.sub(r"\s+", " ", stem).strip()
+
+    if not stem:
+        raise ValueError("Could not parse question stem from OCR.")
+
+    # Ensure BLANK_TOKEN spacing looks nice (optional)
+    stem = stem.replace(" _ ", f" {BLANK_TOKEN} ")
+    stem = re.sub(r"\s+", " ", stem).strip()
+
+    if any(not c.strip() for c in choices):
+        if not ALLOW_INCOMPLETE_CHOICES:
+            raise ValueError(f"Could not parse all 4 choices. Got: {choices}")
+        needs_review = True
+        choices = [c.strip() if c.strip() else MISSING_CHOICE_PLACEHOLDER for c in choices]
+
+    return stem, choices, needs_review
+
+
+# -------------------------
+# Main ingest
+# -------------------------
 def main():
     base = Path(__file__).resolve().parent
     in_dir = (base / INPUT_FOLDER).resolve()
@@ -340,6 +499,7 @@ def main():
 
     for img_file in files:
         try:
+            # Assign qid
             if QID_MODE == "filename":
                 qid = qid_from_filename(img_file.stem)
                 if qid is None:
@@ -348,15 +508,20 @@ def main():
                 qid = next_qid
                 next_qid += 1
 
-            lines = ocr_image_lines(str(img_file))
+            # OCR -> rebuild lines (with underline blanks inserted)
+            lines = rebuild_lines_and_insert_blanks(str(img_file))
+
+            # Parse to stem + choices
             stem, choices, needs_review = parse_question(lines)
 
+            # Answer mapping (1-4 -> 0-3)
             answer_index = -1
             if str(qid) in answers_map:
                 v = int(answers_map[str(qid)])
                 if 1 <= v <= 4:
                     answer_index = v - 1
 
+            # Rename image (optional) - after success if enabled
             final_img = img_file
             if RENAME_FILES and (not RENAME_ONLY_ON_SUCCESS or True):
                 final_img = rename_image_file(img_file, qid)
@@ -387,6 +552,9 @@ def main():
 
             flag = " ⚠️" if needs_review else ""
             print(f"[OK] {final_img.name} -> qid={qid}{flag}")
+            # Helpful debug: show stem if it contains blanks
+            if BLANK_TOKEN in stem:
+                print("     stem:", stem)
 
         except Exception as e:
             errors += 1
