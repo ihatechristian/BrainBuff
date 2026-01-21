@@ -56,7 +56,9 @@ MAX_Y_DIFF_TO_MERGE_PX = 10            # merge segments if vertical centers clos
 BLANK_TOKEN = "_____"                  # what to insert into question text
 # =========================
 
-LEADING_QNUM_RE = re.compile(r"^\s*(?:Q\s*)?\d{1,4}\s*[.)]\s*")
+# ✅ FIX: also removes "10 " (no dot), "10-" etc.
+LEADING_QNUM_RE = re.compile(r"^\s*(?:Q\s*)?\d{1,4}\s*(?:[.)\-:]|\s+)\s*")
+
 FILENAME_QID_RE = re.compile(r"(?:^|[^0-9])(?:Q)?(\d{1,6})(?:[^0-9]|$)", re.IGNORECASE)
 IMG_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}
 
@@ -159,19 +161,13 @@ def rename_image_file(img_file: Path, qid: int) -> Path:
 # Underline (blank) detection
 # -------------------------
 def detect_underlines(img_bgr) -> List[Tuple[int, int, int]]:
-    """
-    Returns list of (x1, x2, y_center) for detected underline blanks.
-    Robust to broken segments (merges close pieces).
-    """
     import cv2
-    import numpy as np
 
     h, w = img_bgr.shape[:2]
     min_w = max(MIN_UNDERLINE_WIDTH_PX, int(w * float(MIN_UNDERLINE_WIDTH_RATIO)))
 
     gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
 
-    # Invert so strokes become white (helps morphology)
     thr = cv2.adaptiveThreshold(
         gray, 255,
         cv2.ADAPTIVE_THRESH_MEAN_C,
@@ -179,20 +175,17 @@ def detect_underlines(img_bgr) -> List[Tuple[int, int, int]]:
         35, 12
     )
 
-    # Remove small noise
     thr = cv2.medianBlur(thr, 3)
 
-    # Horizontal line emphasis
     kernel_w = max(20, int(w * 0.06))
     horiz = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_w, 1))
     lines = cv2.morphologyEx(thr, cv2.MORPH_OPEN, horiz, iterations=1)
 
-    # Slight dilation helps connect tiny breaks
     lines = cv2.dilate(lines, cv2.getStructuringElement(cv2.MORPH_RECT, (9, 1)), iterations=1)
 
     contours, _ = cv2.findContours(lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    candidates: List[Tuple[int, int, int, int]] = []  # x,y,w,h
+    candidates: List[Tuple[int, int, int, int]] = []
     for c in contours:
         x, y, ww, hh = cv2.boundingRect(c)
         if ww < min_w:
@@ -204,7 +197,6 @@ def detect_underlines(img_bgr) -> List[Tuple[int, int, int]]:
             continue
         candidates.append((x, y, ww, hh))
 
-    # Merge segments that are on the same y-level and close in x
     candidates.sort(key=lambda t: (t[1] + t[3] // 2, t[0]))
     merged: List[Tuple[int, int, int, int]] = []
 
@@ -219,7 +211,6 @@ def detect_underlines(img_bgr) -> List[Tuple[int, int, int]]:
         gap = x - (mx + mww)
 
         if abs(yc - myc) <= MAX_Y_DIFF_TO_MERGE_PX and gap <= MAX_GAP_TO_MERGE_PX:
-            # merge into last
             nx = mx
             ny = min(my, y)
             nx2 = max(mx + mww, x + ww)
@@ -234,13 +225,7 @@ def detect_underlines(img_bgr) -> List[Tuple[int, int, int]]:
     return out
 
 
-# -------------------------
-# OCR with boxes -> line rebuild + blank insertion
-# -------------------------
 def ocr_tokens_with_boxes(img_path: str) -> Tuple[List[Tuple[str, float, float, float, float]], Tuple[int, int]]:
-    """
-    Returns tokens: (text, x1, x2, y1, y2) and image (w,h).
-    """
     global _OCR
     import cv2
 
@@ -272,12 +257,10 @@ def ocr_tokens_with_boxes(img_path: str) -> Tuple[List[Tuple[str, float, float, 
         blocks = result[0] if (len(result) == 1 and isinstance(result[0], list)) else result
         for block in blocks:
             try:
-                box = block[0]          # 4 points
-                text = str(block[1][0]) # (text, conf)
+                box = block[0]
+                text = str(block[1][0])
                 if not text:
                     continue
-
-                # keep underscores; just trim edges
                 text = text.strip()
                 if not text:
                     continue
@@ -294,10 +277,6 @@ def ocr_tokens_with_boxes(img_path: str) -> Tuple[List[Tuple[str, float, float, 
 
 
 def rebuild_lines_and_insert_blanks(img_path: str) -> List[str]:
-    """
-    Build clean OCR lines using box positions and insert BLANK_TOKEN
-    where underline blanks are detected (by x position).
-    """
     import cv2
 
     tokens, (w, h) = ocr_tokens_with_boxes(img_path)
@@ -305,16 +284,11 @@ def rebuild_lines_and_insert_blanks(img_path: str) -> List[str]:
 
     underlines = detect_underlines(img) if img is not None else []
 
-    # No tokens fallback
     if not tokens:
-        # if we still have underlines, just return one line with blanks
         return [BLANK_TOKEN] if underlines else []
 
-    # Cluster tokens into lines by y-center
-    # dynamic tolerance based on image height
     line_tol = max(10, int(h * 0.018))
 
-    # Each line: {"yc": float, "tokens":[(text,x_center,x1,x2)]}
     lines: List[Dict[str, object]] = []
     for text, x1, x2, y1, y2 in sorted(tokens, key=lambda t: ((t[3] + t[4]) / 2, t[1])):
         yc = (y1 + y2) / 2.0
@@ -323,7 +297,6 @@ def rebuild_lines_and_insert_blanks(img_path: str) -> List[str]:
         placed = False
         for L in lines:
             if abs(yc - float(L["yc"])) <= line_tol:
-                # update running yc
                 L["yc"] = (float(L["yc"]) * 0.85) + (yc * 0.15)
                 cast = L["tokens"]  # type: ignore
                 cast.append((text, xc, x1, x2))  # type: ignore
@@ -333,13 +306,10 @@ def rebuild_lines_and_insert_blanks(img_path: str) -> List[str]:
         if not placed:
             lines.append({"yc": yc, "tokens": [(text, xc, x1, x2)]})
 
-    # Sort tokens inside each line by x
     for L in lines:
         L["tokens"] = sorted(L["tokens"], key=lambda t: t[1])  # type: ignore
 
-    # Insert blanks into nearest line by y, at x-position among tokens
     for x1, x2, yc in underlines:
-        # pick closest line by y
         best_i = None
         best_d = 1e18
         for i, L in enumerate(lines):
@@ -353,19 +323,16 @@ def rebuild_lines_and_insert_blanks(img_path: str) -> List[str]:
         L = lines[best_i]
         toks = list(L["tokens"])  # type: ignore
 
-        # If this line already contains underscores, don't double insert
         joined = " ".join([t[0] for t in toks])
         if "__" in joined:
             continue
 
         blank_xc = (x1 + x2) / 2.0
 
-        # Find insertion point by x-center
         ins = 0
         while ins < len(toks) and toks[ins][1] < blank_xc:
             ins += 1
 
-        # Avoid inserting multiple blanks at same spot
         if ins > 0 and toks[ins - 1][0] == BLANK_TOKEN:
             continue
         if ins < len(toks) and toks[ins][0] == BLANK_TOKEN:
@@ -374,15 +341,12 @@ def rebuild_lines_and_insert_blanks(img_path: str) -> List[str]:
         toks.insert(ins, (BLANK_TOKEN, blank_xc, float(x1), float(x2)))
         L["tokens"] = toks  # type: ignore
 
-    # Convert lines back to text
     out_lines: List[str] = []
     for L in sorted(lines, key=lambda d: float(d["yc"])):  # type: ignore
         toks = L["tokens"]  # type: ignore
-        # normalize underscore sequences found in OCR text
         parts = []
         for t in toks:
             s = t[0]
-            # If OCR gave "__" or "___", standardize
             if re.search(r"_{2,}", s):
                 s = BLANK_TOKEN
             parts.append(s)
@@ -394,11 +358,7 @@ def rebuild_lines_and_insert_blanks(img_path: str) -> List[str]:
     return out_lines
 
 
-# -------------------------
-# Parsing into stem + 4 choices
-# -------------------------
 def _clean_stem_line(ln: str) -> str:
-    # Keep underscores; just remove leading question numbering and normalize spaces
     ln = LEADING_QNUM_RE.sub("", ln).strip()
     ln = re.sub(r"\s+", " ", ln).strip()
     return ln
@@ -412,9 +372,6 @@ def _clean_choice_text(txt: str) -> str:
 
 
 def parse_question(lines: List[str]) -> Tuple[str, List[str], bool]:
-    """
-    Returns (stem, choices[4], needs_review)
-    """
     stem_parts: List[str] = []
     choices = ["", "", "", ""]
     needs_review = False
@@ -429,7 +386,6 @@ def parse_question(lines: List[str]) -> Tuple[str, List[str], bool]:
 
         m = OPT_LINE_RE.match(raw)
         if m:
-            # treat as option line only if it looks like "(1) ..." or "1) ..."
             opt_num = int(m.group(1))
             idx = opt_num - 1
             txt = _clean_choice_text(m.group(2) or "")
@@ -443,7 +399,6 @@ def parse_question(lines: List[str]) -> Tuple[str, List[str], bool]:
             if cleaned:
                 stem_parts.append(cleaned)
         else:
-            # wrapped line continues last option
             if last_opt is None:
                 last_opt = 0
             extra = _clean_choice_text(raw)
@@ -459,7 +414,6 @@ def parse_question(lines: List[str]) -> Tuple[str, List[str], bool]:
     if not stem:
         raise ValueError("Could not parse question stem from OCR.")
 
-    # Ensure BLANK_TOKEN spacing looks nice (optional)
     stem = stem.replace(" _ ", f" {BLANK_TOKEN} ")
     stem = re.sub(r"\s+", " ", stem).strip()
 
@@ -472,9 +426,6 @@ def parse_question(lines: List[str]) -> Tuple[str, List[str], bool]:
     return stem, choices, needs_review
 
 
-# -------------------------
-# Main ingest
-# -------------------------
 def main():
     base = Path(__file__).resolve().parent
     in_dir = (base / INPUT_FOLDER).resolve()
@@ -499,7 +450,6 @@ def main():
 
     for img_file in files:
         try:
-            # Assign qid
             if QID_MODE == "filename":
                 qid = qid_from_filename(img_file.stem)
                 if qid is None:
@@ -508,20 +458,15 @@ def main():
                 qid = next_qid
                 next_qid += 1
 
-            # OCR -> rebuild lines (with underline blanks inserted)
             lines = rebuild_lines_and_insert_blanks(str(img_file))
-
-            # Parse to stem + choices
             stem, choices, needs_review = parse_question(lines)
 
-            # Answer mapping (1-4 -> 0-3)
             answer_index = -1
             if str(qid) in answers_map:
                 v = int(answers_map[str(qid)])
                 if 1 <= v <= 4:
                     answer_index = v - 1
 
-            # Rename image (optional) - after success if enabled
             final_img = img_file
             if RENAME_FILES and (not RENAME_ONLY_ON_SUCCESS or True):
                 final_img = rename_image_file(img_file, qid)
@@ -552,7 +497,6 @@ def main():
 
             flag = " ⚠️" if needs_review else ""
             print(f"[OK] {final_img.name} -> qid={qid}{flag}")
-            # Helpful debug: show stem if it contains blanks
             if BLANK_TOKEN in stem:
                 print("     stem:", stem)
 
