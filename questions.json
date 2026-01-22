@@ -10,7 +10,7 @@
       "2144",
       "2254"
     ],
-    "answer_index": -1,
+    "answer_index": 3,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q001.png",
@@ -44,7 +44,7 @@
       "hundreds",
       "thousands"
     ],
-    "answer_index": -1,
+    "answer_index": 2,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q003.png",
@@ -58,10 +58,10 @@
     "choices": [
       "1",
       "15",
-      ". 54",
+      "54",
       "56"
     ],
-    "answer_index": -1,
+    "answer_index": 3,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q004.png",
@@ -78,7 +78,7 @@
       "3005",
       "3500"
     ],
-    "answer_index": -1,
+    "answer_index": 2,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q005.png",
@@ -95,7 +95,7 @@
       "$10.50",
       "$105.00"
     ],
-    "answer_index": -1,
+    "answer_index": 0,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q006.png",
@@ -112,7 +112,7 @@
       "5+6+5+6+5+6",
       "6+6+6+6+6+6"
     ],
-    "answer_index": -1,
+    "answer_index": 1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q007.png",
@@ -129,7 +129,7 @@
       "906",
       "960"
     ],
-    "answer_index": -1,
+    "answer_index": 3,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q008.png",
@@ -146,7 +146,7 @@
       "48",
       "68"
     ],
-    "answer_index": -1,
+    "answer_index": 2,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q009.png",
@@ -163,7 +163,7 @@
       "35.16",
       "3584"
     ],
-    "answer_index": -1,
+    "answer_index": 0,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q010.png",
@@ -180,7 +180,7 @@
       "4768",
       "7190"
     ],
-    "answer_index": -1,
+    "answer_index": 0,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q011.png",
@@ -197,7 +197,7 @@
       "125",
       "150"
     ],
-    "answer_index": -1,
+    "answer_index": 1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q012.png",
@@ -207,14 +207,14 @@
     "qid": 13,
     "topic": "PSLE",
     "difficulty": "easy",
-    "question": "How many threes are there in 2337",
+    "question": "How many threes are there in 233",
     "choices": [
       "1",
       "2",
       "76",
       "77"
     ],
-    "answer_index": -1,
+    "answer_index": 3,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q013.png",
@@ -231,7 +231,7 @@
       "32",
       "44 ."
     ],
-    "answer_index": -1,
+    "answer_index": 1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q014.png",
@@ -248,7 +248,7 @@
       "4690",
       "4960"
     ],
-    "answer_index": -1,
+    "answer_index": 1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q015.png",
@@ -265,7 +265,7 @@
       "hundreds",
       "thousands"
     ],
-    "answer_index": -1,
+    "answer_index": 1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q016.png",
@@ -282,7 +282,7 @@
       "2482",
       "4828"
     ],
-    "answer_index": -1,
+    "answer_index": 0,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q017.png",
@@ -299,7 +299,7 @@
       "2425",
       "2435"
     ],
-    "answer_index": -1,
+    "answer_index": 2,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q018.png",
@@ -316,7 +316,7 @@
       "520",
       "800"
     ],
-    "answer_index": -1,
+    "answer_index": 0,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q019.png",
@@ -333,7 +333,7 @@
       "30",
       "32"
     ],
-    "answer_index": -1,
+    "answer_index": 0,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q020.png",
@@ -350,7 +350,7 @@
       "$2232",
       "$2976"
     ],
-    "answer_index": -1,
+    "answer_index": 2,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q021.png",
@@ -367,7 +367,7 @@
       "54 cm",
       "180 cm"
     ],
-    "answer_index": -1,
+    "answer_index": 1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q022.png",
@@ -384,7 +384,7 @@
       "800",
       "8000 ( )"
     ],
-    "answer_index": -1,
+    "answer_index": 2,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q023.png",
@@ -401,7 +401,7 @@
       "hundreds",
       "thousands ( )"
     ],
-    "answer_index": -1,
+    "answer_index": 3,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q024.png",
@@ -418,7 +418,7 @@
       "205",
       "250"
     ],
-    "answer_index": -1,
+    "answer_index": 1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q025.png",
@@ -435,7 +435,7 @@
       "34",
       "46"
     ],
-    "answer_index": -1,
+    "answer_index": 1,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q026.png",
@@ -452,7 +452,7 @@
       "500",
       "5000"
     ],
-    "answer_index": -1,
+    "answer_index": 2,
     "explanation": "",
     "image": null,
     "source_image": "cropped_questions\\Q027.png",
