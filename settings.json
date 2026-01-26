@@ -1,8 +1,8 @@
 {
-  "activity_window_sec": 3,
-  "low_activity_threshold": 10,
+  "activity_window_sec": 10,
+  "low_activity_threshold": 20,
   "high_activity_spike_threshold": 40,
-  "cooldown_sec": 10,
+  "cooldown_sec": 20,
   "snooze_minutes": 3,
   "max_popups_per_hour": 9998,
   "ai_mode": "off",
