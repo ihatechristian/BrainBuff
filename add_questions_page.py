@@ -308,7 +308,9 @@ class AddQuestionsPage(QtWidgets.QWidget):
             self.m_choices.append(le)
 
         self.m_answer = QtWidgets.QComboBox()
-        self.m_answer.addItems(["-1 (unknown)", "0", "1", "2", "3"])
+        # Human-friendly: 1-4, saved as 0-3
+        self.m_answer.addItems(["unknown", "1", "2", "3", "4"])
+        self.m_answer.setCurrentText("unknown")
 
         self.m_expl = QtWidgets.QPlainTextEdit()
         self.m_expl.setPlaceholderText("Optional explanation")
@@ -367,13 +369,20 @@ class AddQuestionsPage(QtWidgets.QWidget):
                 shutil.copy2(str(src), str(dest))
                 img_rel = str(dest.relative_to(PROJECT_ROOT)).replace("\\", "/")
 
+            ans_txt = (self.m_answer.currentText() or "").strip().lower()
+            if ans_txt == "unknown" or ans_txt == "":
+                ans_idx = -1
+            else:
+                ans_1_4 = int(ans_txt)  # 1..4
+                ans_idx = ans_1_4 - 1  # 0..3
+
             obj = {
                 "qid": qid,
                 "topic": self.m_topic.text().strip() or "PSLE",
                 "difficulty": self.m_diff.currentText().strip(),
                 "question": self.m_question.toPlainText().strip(),
                 "choices": [c.text().strip() for c in self.m_choices],
-                "answer_index": int(self.m_answer.currentText().split()[0]),
+                "answer_index": ans_idx,
                 "explanation": self.m_expl.toPlainText().strip(),
                 "image": img_rel,
             }
