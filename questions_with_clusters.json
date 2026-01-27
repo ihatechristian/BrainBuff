@@ -91,8 +91,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q005.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 6,
@@ -110,8 +110,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q006.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 7,
@@ -129,8 +129,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q007.png",
     "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
   },
   {
     "qid": 8,
@@ -148,8 +148,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q008.png",
     "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
   },
   {
     "qid": 9,
@@ -167,8 +167,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q009.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 10,
@@ -186,8 +186,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q010.png",
     "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_between_3600"
+    "cluster_id": 5,
+    "question_cluster": "cluster_between_the difference"
   },
   {
     "qid": 11,
@@ -205,8 +205,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q011.png",
     "needs_review": false,
-    "cluster_id": 5,
-    "question_cluster": "cluster_the_number"
+    "cluster_id": 0,
+    "question_cluster": "cluster_number_the"
   },
   {
     "qid": 12,
@@ -224,8 +224,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q012.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 13,
@@ -243,7 +243,7 @@
     "image": null,
     "source_image": "cropped_questions\\Q013.png",
     "needs_review": false,
-    "cluster_id": 2,
+    "cluster_id": 1,
     "question_cluster": "number_sense_place_value"
   },
   {
@@ -262,8 +262,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q014.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 15,
@@ -282,7 +282,7 @@
     "source_image": "cropped_questions\\Q015.png",
     "needs_review": false,
     "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "question_cluster": "number_sense_place_value"
   },
   {
     "qid": 16,
@@ -319,8 +319,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q017.png",
     "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_between_3600"
+    "cluster_id": 5,
+    "question_cluster": "cluster_between_the difference"
   },
   {
     "qid": 18,
@@ -338,8 +338,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q018.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 0,
+    "question_cluster": "cluster_number_the"
   },
   {
     "qid": 19,
@@ -358,7 +358,7 @@
     "source_image": "cropped_questions\\Q019.png",
     "needs_review": false,
     "cluster_id": 5,
-    "question_cluster": "cluster_the_number"
+    "question_cluster": "cluster_between_the difference"
   },
   {
     "qid": 20,
@@ -376,8 +376,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q020.png",
     "needs_review": false,
-    "cluster_id": 5,
-    "question_cluster": "cluster_the_number"
+    "cluster_id": 0,
+    "question_cluster": "cluster_number_the"
   },
   {
     "qid": 21,
@@ -395,7 +395,7 @@
     "image": null,
     "source_image": "cropped_questions\\Q021.png",
     "needs_review": false,
-    "cluster_id": 2,
+    "cluster_id": 1,
     "question_cluster": "number_sense_place_value"
   },
   {
@@ -414,8 +414,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q022.png",
     "needs_review": false,
-    "cluster_id": 5,
-    "question_cluster": "cluster_the_number"
+    "cluster_id": 4,
+    "question_cluster": "multiplication_facts_models"
   },
   {
     "qid": 23,
@@ -471,8 +471,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q025.png",
     "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
   },
   {
     "qid": 26,
@@ -490,8 +490,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q026.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 0,
+    "question_cluster": "cluster_number_the"
   },
   {
     "qid": 27,
@@ -509,8 +509,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q027.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 28,
@@ -528,8 +528,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q028.png",
     "needs_review": false,
-    "cluster_id": 3,
-    "question_cluster": "cluster_between 67_and 9000"
+    "cluster_id": 5,
+    "question_cluster": "cluster_between_the difference"
   },
   {
     "qid": 29,
@@ -547,8 +547,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q029.png",
     "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
   },
   {
     "qid": 30,
@@ -566,7 +566,7 @@
     "image": null,
     "source_image": "cropped_questions\\Q030.png",
     "needs_review": false,
-    "cluster_id": 2,
+    "cluster_id": 1,
     "question_cluster": "number_sense_place_value"
   },
   {
@@ -585,7 +585,7 @@
     "image": null,
     "source_image": "cropped_questions\\Q031.png",
     "needs_review": false,
-    "cluster_id": 2,
+    "cluster_id": 1,
     "question_cluster": "number_sense_place_value"
   },
   {
@@ -604,8 +604,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q032.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 33,
@@ -623,8 +623,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q033.png",
     "needs_review": false,
-    "cluster_id": 4,
-    "question_cluster": "multiplication_facts_models"
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
   },
   {
     "qid": 34,
@@ -642,8 +642,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q034.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 0,
+    "question_cluster": "cluster_number_the"
   },
   {
     "qid": 35,
@@ -661,8 +661,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q035.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 0,
+    "question_cluster": "cluster_number_the"
   },
   {
     "qid": 36,
@@ -680,8 +680,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q036.png",
     "needs_review": false,
-    "cluster_id": 0,
-    "question_cluster": "cluster_between_3600"
+    "cluster_id": 5,
+    "question_cluster": "cluster_between_the difference"
   },
   {
     "qid": 37,
@@ -699,8 +699,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q037.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 38,
@@ -718,8 +718,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q038.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 39,
@@ -737,7 +737,7 @@
     "image": null,
     "source_image": "cropped_questions\\Q039.png",
     "needs_review": false,
-    "cluster_id": 2,
+    "cluster_id": 1,
     "question_cluster": "number_sense_place_value"
   },
   {
@@ -775,7 +775,7 @@
     "image": null,
     "source_image": "cropped_questions\\Q041.png",
     "needs_review": false,
-    "cluster_id": 2,
+    "cluster_id": 1,
     "question_cluster": "number_sense_place_value"
   },
   {
@@ -794,8 +794,8 @@
     "image": null,
     "source_image": "cropped_questions\\Q042.png",
     "needs_review": false,
-    "cluster_id": 1,
-    "question_cluster": "cluster_the_is"
+    "cluster_id": 3,
+    "question_cluster": "cluster_is_is the"
   },
   {
     "qid": 43,
@@ -815,5 +815,79 @@
     "needs_review": false,
     "cluster_id": 4,
     "question_cluster": "multiplication_facts_models"
+  },
+  {
+    "qid": 44,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The digit in 3985 is in the hundreds.place.",
+    "choices": [
+      "9",
+      "8",
+      "3",
+      "5"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q044.png",
+    "needs_review": false,
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
+  },
+  {
+    "qid": 45,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The digit in 3985 is in the hundreds.place.",
+    "choices": [
+      "9",
+      "8",
+      "3",
+      "5"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q045.png",
+    "needs_review": false,
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
+  },
+  {
+    "qid": 46,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The digit in 3985 is in the hundreds.place.",
+    "choices": [
+      "9",
+      "8",
+      "3",
+      "5"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q046.png",
+    "needs_review": false,
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
+  },
+  {
+    "qid": 47,
+    "topic": "Place Value",
+    "difficulty": "easy",
+    "question": "The digit __________ in 3985 is in the hundreds place.",
+    "choices": [
+      "9",
+      "8",
+      "3",
+      "5"
+    ],
+    "answer_index": 0,
+    "explanation": "In 3985, 3 is in the thousands place, 9 is in the hundreds place, 8 is in the tens place, and 5 is in the ones place.",
+    "image": null,
+    "cluster_id": 1,
+    "question_cluster": "number_sense_place_value"
   }
 ]

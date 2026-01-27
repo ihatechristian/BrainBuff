@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
-import os
 import shutil
+import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Dict, Any, Optional, List
@@ -97,12 +98,71 @@ def normalize_question_obj(obj: Dict[str, Any], qid: Optional[int] = None) -> Di
 
 
 # -----------------------------
+# Auto-update pipeline (ingest -> cluster)
+# -----------------------------
+INGEST_SCRIPT = PROJECT_ROOT / "ingest_question_folder.py"
+CLUSTER_SCRIPT = PROJECT_ROOT / "cluster_questions.py"
+
+
+class _RebuildWorker(QtCore.QObject):
+    status = QtCore.Signal(str)
+    finished = QtCore.Signal(bool, str)
+
+    def _run_script(self, script_path: Path) -> tuple[bool, str]:
+        if not script_path.exists():
+            return False, f"Script not found: {script_path}"
+
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(script_path)],
+                cwd=str(PROJECT_ROOT),
+                capture_output=True,
+                text=True,
+            )
+            out = (proc.stdout or "").strip()
+            err = (proc.stderr or "").strip()
+            combined = "\n".join([x for x in [out, err] if x]).strip()
+
+            if proc.returncode != 0:
+                return False, combined or f"{script_path.name} failed (exit code {proc.returncode})"
+            return True, combined or f"{script_path.name} completed."
+        except Exception as e:
+            return False, f"Failed to run {script_path.name}: {e}"
+
+    @QtCore.Slot()
+    def run(self):
+        logs: list[str] = []
+        ok_all = True
+
+        # Step 1: Ingest (best effort)
+        self.status.emit("🔄 Running ingest_question_folder.py …")
+        ok_ingest, log_ingest = self._run_script(INGEST_SCRIPT)
+        logs.append(f"[ingest] ok={ok_ingest}\n{log_ingest}".strip())
+        if not ok_ingest:
+            ok_all = False
+            self.status.emit("⚠️ Ingest failed (continuing to clustering)…")
+
+        # Step 2: Cluster (always attempt)
+        self.status.emit("🔄 Running cluster_questions.py …")
+        ok_cluster, log_cluster = self._run_script(CLUSTER_SCRIPT)
+        logs.append(f"[cluster] ok={ok_cluster}\n{log_cluster}".strip())
+        if not ok_cluster:
+            ok_all = False
+
+        self.finished.emit(ok_all, "\n\n".join(logs).strip())
+
+
+# -----------------------------
 # Add Questions Page
 # -----------------------------
 class AddQuestionsPage(QtWidgets.QWidget):
     def __init__(self, on_back, parent=None):
         super().__init__(parent)
         self.on_back = on_back
+
+        # thread holders
+        self._rebuild_thread: Optional[QtCore.QThread] = None
+        self._rebuild_worker: Optional[_RebuildWorker] = None
 
         root = QtWidgets.QFrame()
         root.setObjectName("root")
@@ -151,6 +211,52 @@ class AddQuestionsPage(QtWidgets.QWidget):
         outer = QtWidgets.QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(root)
+
+    # -----------------------------
+    # Auto rebuild helper
+    # -----------------------------
+    def _rebuild_bank_async(self):
+        """Run ingest_question_folder.py then cluster_questions.py in background."""
+        # Prevent multiple concurrent rebuilds
+        if self._rebuild_thread is not None and self._rebuild_thread.isRunning():
+            self.status.setText("🔄 Update already running…")
+            return
+
+        self.status.setText("🔄 Updating question bank (ingest + cluster)…")
+
+        self._rebuild_thread = QtCore.QThread(self)
+        self._rebuild_worker = _RebuildWorker()
+        self._rebuild_worker.moveToThread(self._rebuild_thread)
+
+        self._rebuild_thread.started.connect(self._rebuild_worker.run)
+        self._rebuild_worker.status.connect(self.status.setText)
+
+        def _done(ok: bool, log: str):
+            if ok:
+                self.status.setText("✅ Question bank updated (ingest + cluster).")
+            else:
+                # Even if ingest fails, clustering might have worked (manual/JSON flow).
+                self.status.setText("⚠️ Update completed with issues. See details.")
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Question bank update",
+                    log or "Update failed.",
+                )
+
+            if self._rebuild_thread:
+                self._rebuild_thread.quit()
+                self._rebuild_thread.wait(2000)
+
+            if self._rebuild_worker:
+                self._rebuild_worker.deleteLater()
+            if self._rebuild_thread:
+                self._rebuild_thread.deleteLater()
+
+            self._rebuild_worker = None
+            self._rebuild_thread = None
+
+        self._rebuild_worker.finished.connect(_done)
+        self._rebuild_thread.start()
 
     # -------- Manual Form --------
     def _build_manual_tab(self) -> QtWidgets.QWidget:
@@ -218,7 +324,7 @@ class AddQuestionsPage(QtWidgets.QWidget):
             self,
             "Select diagram image",
             str(PROJECT_ROOT),
-            "Images (*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff)"
+            "Images (*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff)",
         )
         if fn:
             self.m_image_path.setText(fn)
@@ -261,6 +367,10 @@ class AddQuestionsPage(QtWidgets.QWidget):
                 c.setText("")
             self.m_expl.setPlainText("")
             self.m_image_path.setText("")
+
+            # Auto-update bank after add
+            self._rebuild_bank_async()
+
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Add failed", str(e))
 
@@ -279,15 +389,15 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
         self.json_text = QtWidgets.QPlainTextEdit()
         self.json_text.setPlaceholderText(
-            '{\n'
+            "{\n"
             '  "topic": "Decimals",\n'
             '  "difficulty": "easy",\n'
             '  "question": "Calculate 3 + 3/100 + 30/1000.",\n'
             '  "choices": ["3.033", "3.06", "3.33", "3.6"],\n'
             '  "answer_index": 0,\n'
-            '  "explanation": "..." ,\n'
+            '  "explanation": "...",\n'
             '  "image": null\n'
-            '}\n'
+            "}\n"
         )
 
         btn_add = QtWidgets.QPushButton("Add JSON to questions.json")
@@ -322,6 +432,10 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
             save_question_bank(bank)
             self.status.setText(f"✅ Added {added} question(s) to {QUESTIONS_PATH.name}")
+
+            # Auto-update bank after add
+            self._rebuild_bank_async()
+
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Add failed", str(e))
 
@@ -368,7 +482,7 @@ class AddQuestionsPage(QtWidgets.QWidget):
             self,
             "Select question images",
             str(PROJECT_ROOT),
-            "Images (*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff)"
+            "Images (*.png *.jpg *.jpeg *.webp *.bmp *.tif *.tiff)",
         )
         if not files:
             return
@@ -406,7 +520,11 @@ class AddQuestionsPage(QtWidgets.QWidget):
                 copied += 1
 
             self.status.setText(
-                f"✅ Copied {copied} image(s) into {CROPPED_DIR.name}/. Now run your ingest script."
+                f"✅ Copied {copied} image(s) into {CROPPED_DIR.name}/. Updating bank (ingest + cluster)…"
             )
+
+            # Auto-update bank after import images (runs OCR ingest + clustering)
+            self._rebuild_bank_async()
+
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Copy failed", str(e))

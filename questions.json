@@ -729,5 +729,71 @@
     "image": null,
     "source_image": "cropped_questions\\Q043.png",
     "needs_review": false
+  },
+  {
+    "qid": 44,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The digit in 3985 is in the hundreds.place.",
+    "choices": [
+      "9",
+      "8",
+      "3",
+      "5"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q044.png",
+    "needs_review": false
+  },
+  {
+    "qid": 45,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The digit in 3985 is in the hundreds.place.",
+    "choices": [
+      "9",
+      "8",
+      "3",
+      "5"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q045.png",
+    "needs_review": false
+  },
+  {
+    "qid": 46,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "The digit in 3985 is in the hundreds.place.",
+    "choices": [
+      "9",
+      "8",
+      "3",
+      "5"
+    ],
+    "answer_index": -1,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q046.png",
+    "needs_review": false
+  },
+  {
+    "qid": 47,
+    "topic": "Place Value",
+    "difficulty": "easy",
+    "question": "The digit __________ in 3985 is in the hundreds place.",
+    "choices": [
+      "9",
+      "8",
+      "3",
+      "5"
+    ],
+    "answer_index": 0,
+    "explanation": "In 3985, 3 is in the thousands place, 9 is in the hundreds place, 8 is in the tens place, and 5 is in the ones place.",
+    "image": null
   }
 ]
