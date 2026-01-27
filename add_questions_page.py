@@ -5,12 +5,13 @@ import shutil
 import subprocess
 import sys
 import time
+import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
 from PySide6 import QtWidgets, QtCore
 
-from bb_paths import PROJECT_ROOT, QUESTIONS_PATH, CROPPED_DIR, IMAGES_DIR
+from bb_paths import PROJECT_ROOT, QUESTIONS_PATH, CROPPED_DIR, IMAGES_DIR, ANSWERS_MAP_PATH
 
 
 # -----------------------------
@@ -108,23 +109,41 @@ class _RebuildWorker(QtCore.QObject):
     status = QtCore.Signal(str)
     finished = QtCore.Signal(bool, str)
 
-    def _run_script(self, script_path: Path) -> tuple[bool, str]:
+    def _run_script(self, script_path: Path, expected_out: Optional[Path] = None) -> tuple[bool, str]:
         if not script_path.exists():
             return False, f"Script not found: {script_path}"
 
         try:
+            env = os.environ.copy()
+            # Force UTF-8 so Paddle logs won't crash decoding
+            env["PYTHONUTF8"] = "1"
+            env["PYTHONIOENCODING"] = "utf-8"
+
             proc = subprocess.run(
                 [sys.executable, str(script_path)],
                 cwd=str(PROJECT_ROOT),
-                capture_output=True,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
+
             out = (proc.stdout or "").strip()
             err = (proc.stderr or "").strip()
-            combined = "\n".join([x for x in [out, err] if x]).strip()
+            combined = "\n".join([x for x in (out, err) if x]).strip()
 
             if proc.returncode != 0:
                 return False, combined or f"{script_path.name} failed (exit code {proc.returncode})"
+
+            # If you expect a file to be produced, verify it exists
+            if expected_out is not None and not expected_out.exists():
+                return False, (
+                    f"{script_path.name} exited 0 but did NOT create:\n"
+                    f"{expected_out}\n\nLogs:\n{combined}"
+                )
+
             return True, combined or f"{script_path.name} completed."
         except Exception as e:
             return False, f"Failed to run {script_path.name}: {e}"
@@ -134,17 +153,20 @@ class _RebuildWorker(QtCore.QObject):
         logs: list[str] = []
         ok_all = True
 
-        # Step 1: Ingest (best effort)
+        questions_out = QUESTIONS_PATH
+        clustered_out = PROJECT_ROOT / "questions_with_cluster.json"  # change if your file name differs
+
+        # Step 1: Ingest
         self.status.emit("🔄 Running ingest_question_folder.py …")
-        ok_ingest, log_ingest = self._run_script(INGEST_SCRIPT)
+        ok_ingest, log_ingest = self._run_script(INGEST_SCRIPT, expected_out=questions_out)
         logs.append(f"[ingest] ok={ok_ingest}\n{log_ingest}".strip())
         if not ok_ingest:
             ok_all = False
             self.status.emit("⚠️ Ingest failed (continuing to clustering)…")
 
-        # Step 2: Cluster (always attempt)
+        # Step 2: Cluster
         self.status.emit("🔄 Running cluster_questions.py …")
-        ok_cluster, log_cluster = self._run_script(CLUSTER_SCRIPT)
+        ok_cluster, log_cluster = self._run_script(CLUSTER_SCRIPT, expected_out=clustered_out)
         logs.append(f"[cluster] ok={ok_cluster}\n{log_cluster}".strip())
         if not ok_cluster:
             ok_all = False
@@ -440,6 +462,7 @@ class AddQuestionsPage(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(self, "Add failed", str(e))
 
     # -------- Import Images --------
+    # -------- Import Images --------
     def _build_images_tab(self) -> QtWidgets.QWidget:
         w = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(w)
@@ -447,7 +470,8 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
         info = QtWidgets.QLabel(
             "This copies images into cropped_questions/ for your OCR ingest script.\n"
-            "Optional: auto-rename to Q001.png, Q002.png… based on the next qid in questions.json."
+            "Optional: auto-rename to Q001.png, Q002.png… based on the next qid in questions.json.\n"
+            "You can also type an answer (1-4) per image. This will be saved into answers_map.json and used during ingest."
         )
         info.setObjectName("hint")
         info.setWordWrap(True)
@@ -457,23 +481,36 @@ class AddQuestionsPage(QtWidgets.QWidget):
         btn_pick.setObjectName("btnSecondary")
         btn_pick.clicked.connect(self._pick_images)
 
-        self.chk_rename = QtWidgets.QCheckBox("Auto-rename to Q###.ext")
+        self.chk_rename = QtWidgets.QCheckBox("Auto-rename to Q###.ext (recommended)")
         self.chk_rename.setChecked(True)
 
         row.addWidget(btn_pick)
         row.addWidget(self.chk_rename)
         row.addStretch()
 
-        self.img_list = QtWidgets.QListWidget()
-        self.img_list.setMinimumHeight(220)
+        # Table: File | Answer (1-4)
+        self.img_table = QtWidgets.QTableWidget(0, 2)
+        self.img_table.setMinimumHeight(240)
+        self.img_table.setHorizontalHeaderLabels(["File", "Answer (1-4, blank=unknown)"])
+        self.img_table.verticalHeader().setVisible(False)
+        self.img_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.img_table.setEditTriggers(
+            QtWidgets.QAbstractItemView.DoubleClicked
+            | QtWidgets.QAbstractItemView.EditKeyPressed
+            | QtWidgets.QAbstractItemView.AnyKeyPressed
+        )
 
-        btn_copy = QtWidgets.QPushButton("Copy into cropped_questions/")
+        header = self.img_table.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+
+        btn_copy = QtWidgets.QPushButton("Copy into cropped_questions/ (and save answers)")
         btn_copy.setObjectName("btnPrimaryAlt")
         btn_copy.clicked.connect(self._copy_images)
 
         layout.addWidget(info)
         layout.addLayout(row)
-        layout.addWidget(self.img_list)
+        layout.addWidget(self.img_table)
         layout.addWidget(btn_copy, alignment=QtCore.Qt.AlignRight)
         return w
 
@@ -486,13 +523,45 @@ class AddQuestionsPage(QtWidgets.QWidget):
         )
         if not files:
             return
-        self.img_list.clear()
-        for f in files:
-            self.img_list.addItem(f)
+
+        self.img_table.setRowCount(0)
+        self.img_table.setRowCount(len(files))
+
+        for r, f in enumerate(files):
+            # File path (read-only)
+            item_path = QtWidgets.QTableWidgetItem(f)
+            item_path.setFlags(item_path.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.img_table.setItem(r, 0, item_path)
+
+            # Answer input (editable). User types 1-4 or blank.
+            item_ans = QtWidgets.QTableWidgetItem("")
+            item_ans.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.img_table.setItem(r, 1, item_ans)
 
     def _copy_images(self):
+        def _parse_answer(text: str) -> Optional[int]:
+            t = (text or "").strip().upper()
+            if not t:
+                return None
+
+            # Allow A/B/C/D as convenience
+            if t in ("A", "B", "C", "D"):
+                return {"A": 1, "B": 2, "C": 3, "D": 4}[t]
+
+            # Allow 0-3 or 1-4
+            try:
+                n = int(t)
+            except Exception:
+                return None
+
+            if 1 <= n <= 4:
+                return n
+            if 0 <= n <= 3:
+                return n + 1
+            return None
+
         try:
-            if self.img_list.count() == 0:
+            if self.img_table.rowCount() == 0:
                 raise ValueError("Pick some images first.")
 
             CROPPED_DIR.mkdir(parents=True, exist_ok=True)
@@ -501,30 +570,71 @@ class AddQuestionsPage(QtWidgets.QWidget):
             qid = next_qid(bank)
 
             copied = 0
-            for i in range(self.img_list.count()):
-                src = Path(self.img_list.item(i).text())
+            answers_to_save: dict[str, int] = {}
+
+            for r in range(self.img_table.rowCount()):
+                src_path = self.img_table.item(r, 0).text().strip()
+                ans_text = (self.img_table.item(r, 1).text() if self.img_table.item(r, 1) else "").strip()
+
+                src = Path(src_path)
                 if not src.exists():
                     continue
 
                 suffix = src.suffix.lower()
+
+                # IMPORTANT: answers map only makes sense if we control the qid via rename
                 if self.chk_rename.isChecked():
                     dest = CROPPED_DIR / f"Q{qid:03d}{suffix}"
-                    qid += 1
                 else:
                     dest = CROPPED_DIR / src.name
 
+                # avoid overwriting
                 if dest.exists() and dest.resolve() != src.resolve():
                     dest = CROPPED_DIR / f"{dest.stem}_{int(time.time())}{dest.suffix}"
 
                 shutil.copy2(str(src), str(dest))
                 copied += 1
 
-            self.status.setText(
-                f"✅ Copied {copied} image(s) into {CROPPED_DIR.name}/. Updating bank (ingest + cluster)…"
-            )
+                # Save answer mapping for this qid (only if rename enabled)
+                if self.chk_rename.isChecked():
+                    parsed = _parse_answer(ans_text)
+                    if parsed is not None:
+                        answers_to_save[str(qid)] = parsed
 
-            # Auto-update bank after import images (runs OCR ingest + clustering)
-            self._rebuild_bank_async()
+                    qid += 1  # increment only when rename drives qid sequence
+
+            # Merge answers into answers_map.json
+            if self.chk_rename.isChecked() and answers_to_save:
+                existing = {}
+                if ANSWERS_MAP_PATH.exists():
+                    try:
+                        existing = json.loads(ANSWERS_MAP_PATH.read_text(encoding="utf-8"))
+                        if not isinstance(existing, dict):
+                            existing = {}
+                    except Exception:
+                        existing = {}
+
+                existing.update(answers_to_save)
+                ANSWERS_MAP_PATH.write_text(
+                    json.dumps(existing, indent=2, ensure_ascii=False),
+                    encoding="utf-8",
+                )
+
+            if not self.chk_rename.isChecked():
+                self.status.setText(
+                    f"✅ Copied {copied} image(s) into {CROPPED_DIR.name}/.\n"
+                    f"⚠️ Answer mapping requires Auto-rename to be enabled (so qids match filenames)."
+                )
+            else:
+                msg = f"✅ Copied {copied} image(s) into {CROPPED_DIR.name}/."
+                if answers_to_save:
+                    msg += f" Saved {len(answers_to_save)} answer(s) into {ANSWERS_MAP_PATH.name}."
+                msg += " Updating bank (ingest + cluster)…"
+                self.status.setText(msg)
+
+                # Auto-update bank after import images
+                self._rebuild_bank_async()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Copy failed", str(e))
+

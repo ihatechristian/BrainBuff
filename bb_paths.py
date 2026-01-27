@@ -11,3 +11,4 @@ IMAGES_DIR = PROJECT_ROOT / "images"
 
 GAME_MAIN = PROJECT_ROOT / "demo_game" / "main.py"
 OVERLAY_MAIN = PROJECT_ROOT / "overlay_trigger.py"
+ANSWERS_MAP_PATH = PROJECT_ROOT / "answers_map.json"

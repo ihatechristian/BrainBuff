@@ -16,23 +16,24 @@ import time
 import warnings
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
+from bb_paths import ANSWERS_MAP_PATH, QUESTIONS_PATH, CROPPED_DIR
 
 # =========================
 # CONFIG (edit these)
 # =========================
-INPUT_FOLDER = "cropped_questions"     # folder of images
-OUTPUT_JSON = "questions.json"         # output bank
-ANSWERS_JSON = None                    # e.g. "answers_map.json" or None
+INPUT_FOLDER = CROPPED_DIR             # folder of images
+OUTPUT_JSON = QUESTIONS_PATH           # output bank
+ANSWERS_JSON = ANSWERS_MAP_PATH        # e.g. "answers_map.json" or None
 
 DEFAULT_TOPIC = "PSLE"
 DEFAULT_DIFFICULTY = "easy"
 
-QID_MODE = "sequence"                  # "sequence" or "filename"
+QID_MODE = "filename"                  # "sequence" or "filename"
 START_QID = 1
 OVERWRITE_EXISTING = False
 
 # --- Renaming ---
-RENAME_FILES = True
+RENAME_FILES = False
 RENAME_PREFIX = "Q"                    # Q001.png
 RENAME_PAD = 3
 RENAME_ONLY_ON_SUCCESS = True
@@ -435,7 +436,9 @@ def main():
     if not in_dir.exists() or not in_dir.is_dir():
         raise FileNotFoundError(f"Input folder not found: {in_dir}")
 
-    answers_map = load_answers_map(str(ans_path)) if ans_path else {}
+    answers_map = {}
+    if ans_path and ans_path.exists():
+        answers_map = load_answers_map(str(ans_path))
 
     bank = load_json_list(str(out_path))
     existing_by_qid: dict[int, int] = {}
