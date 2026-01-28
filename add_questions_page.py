@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
 import time
-import os
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtCore, QtWidgets
 
 from bb_paths import PROJECT_ROOT, QUESTIONS_PATH, CROPPED_DIR, IMAGES_DIR, ANSWERS_MAP_PATH
 
@@ -115,7 +115,6 @@ class _RebuildWorker(QtCore.QObject):
 
         try:
             env = os.environ.copy()
-            # Force UTF-8 so Paddle logs won't crash decoding
             env["PYTHONUTF8"] = "1"
             env["PYTHONIOENCODING"] = "utf-8"
 
@@ -137,7 +136,6 @@ class _RebuildWorker(QtCore.QObject):
             if proc.returncode != 0:
                 return False, combined or f"{script_path.name} failed (exit code {proc.returncode})"
 
-            # If you expect a file to be produced, verify it exists
             if expected_out is not None and not expected_out.exists():
                 return False, (
                     f"{script_path.name} exited 0 but did NOT create:\n"
@@ -156,7 +154,6 @@ class _RebuildWorker(QtCore.QObject):
         questions_out = QUESTIONS_PATH
         clustered_out = PROJECT_ROOT / "questions_with_cluster.json"  # change if your file name differs
 
-        # Step 1: Ingest
         self.status.emit("🔄 Running ingest_question_folder.py …")
         ok_ingest, log_ingest = self._run_script(INGEST_SCRIPT, expected_out=questions_out)
         logs.append(f"[ingest] ok={ok_ingest}\n{log_ingest}".strip())
@@ -164,7 +161,6 @@ class _RebuildWorker(QtCore.QObject):
             ok_all = False
             self.status.emit("⚠️ Ingest failed (continuing to clustering)…")
 
-        # Step 2: Cluster
         self.status.emit("🔄 Running cluster_questions.py …")
         ok_cluster, log_cluster = self._run_script(CLUSTER_SCRIPT, expected_out=clustered_out)
         logs.append(f"[cluster] ok={ok_cluster}\n{log_cluster}".strip())
@@ -209,6 +205,7 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
         btn_back = QtWidgets.QPushButton("Back")
         btn_back.setObjectName("btnGhost")
+        btn_back.setMinimumHeight(44)
         btn_back.clicked.connect(self.on_back)
 
         self.status = QtWidgets.QLabel("")
@@ -218,7 +215,7 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
         v = QtWidgets.QVBoxLayout(card)
         v.setContentsMargins(28, 28, 28, 24)
-        v.setSpacing(14)
+        v.setSpacing(16)
         v.addWidget(title)
         v.addWidget(subtitle)
         v.addWidget(tabs)
@@ -239,7 +236,6 @@ class AddQuestionsPage(QtWidgets.QWidget):
     # -----------------------------
     def _rebuild_bank_async(self):
         """Run ingest_question_folder.py then cluster_questions.py in background."""
-        # Prevent multiple concurrent rebuilds
         if self._rebuild_thread is not None and self._rebuild_thread.isRunning():
             self.status.setText("🔄 Update already running…")
             return
@@ -257,7 +253,6 @@ class AddQuestionsPage(QtWidgets.QWidget):
             if ok:
                 self.status.setText("✅ Question bank updated (ingest + cluster).")
             else:
-                # Even if ingest fails, clustering might have worked (manual/JSON flow).
                 self.status.setText("⚠️ Update completed with issues. See details.")
                 QtWidgets.QMessageBox.warning(
                     self,
@@ -280,48 +275,79 @@ class AddQuestionsPage(QtWidgets.QWidget):
         self._rebuild_worker.finished.connect(_done)
         self._rebuild_thread.start()
 
-    # -------- Manual Form --------
+    # -------- Manual Form (SCROLLABLE so bigger fields won't overlap) --------
     def _build_manual_tab(self) -> QtWidgets.QWidget:
-        w = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(w)
-        layout.setSpacing(10)
+        outer = QtWidgets.QWidget()
+        outer_layout = QtWidgets.QVBoxLayout(outer)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+        content = QtWidgets.QWidget()
+        scroll.setWidget(content)
+
+        layout = QtWidgets.QVBoxLayout(content)
+        layout.setSpacing(14)
+        layout.setContentsMargins(12, 12, 12, 12)
 
         form = QtWidgets.QFormLayout()
-        form.setHorizontalSpacing(16)
-        form.setVerticalSpacing(10)
+        form.setHorizontalSpacing(18)
+        form.setVerticalSpacing(12)
+        form.setLabelAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form.setFormAlignment(QtCore.Qt.AlignTop)
+        form.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
 
+        # Topic
         self.m_topic = QtWidgets.QLineEdit()
+        self.m_topic.setObjectName("input")
         self.m_topic.setPlaceholderText("e.g. Decimals, Geometry, PSLE")
         self.m_topic.setText("PSLE")
 
+        # Difficulty
         self.m_diff = QtWidgets.QComboBox()
+        self.m_diff.setObjectName("combo")
         self.m_diff.addItems(["easy", "medium", "hard"])
         self.m_diff.setCurrentText("easy")
 
+        # Question
         self.m_question = QtWidgets.QPlainTextEdit()
         self.m_question.setPlaceholderText("Enter the question text (use _____ for blanks if needed)")
+        self.m_question.setMinimumHeight(140)
 
+        # Choices
         self.m_choices = []
         for i in range(4):
             le = QtWidgets.QLineEdit()
+            le.setObjectName("input")
             le.setPlaceholderText(f"Choice {i+1}")
             self.m_choices.append(le)
 
+        # Answer
         self.m_answer = QtWidgets.QComboBox()
-        # Human-friendly: 1-4, saved as 0-3
+        self.m_answer.setObjectName("combo")
         self.m_answer.addItems(["unknown", "1", "2", "3", "4"])
         self.m_answer.setCurrentText("unknown")
 
+        # Explanation
         self.m_expl = QtWidgets.QPlainTextEdit()
         self.m_expl.setPlaceholderText("Optional explanation")
+        self.m_expl.setMinimumHeight(120)
 
+        # Diagram row
         img_row = QtWidgets.QHBoxLayout()
+        img_row.setSpacing(10)
+
         self.m_image_path = QtWidgets.QLineEdit()
+        self.m_image_path.setObjectName("input")
         self.m_image_path.setReadOnly(True)
+
         btn_browse = QtWidgets.QPushButton("Browse Image…")
         btn_browse.setObjectName("btnSecondary")
         btn_browse.clicked.connect(self._browse_manual_image)
-        img_row.addWidget(self.m_image_path)
+
+        img_row.addWidget(self.m_image_path, 1)
         img_row.addWidget(btn_browse)
 
         form.addRow("Topic", self.m_topic)
@@ -337,11 +363,16 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
         btn_add = QtWidgets.QPushButton("Add to questions.json")
         btn_add.setObjectName("btnPrimary")
+        btn_add.setMinimumHeight(48)
         btn_add.clicked.connect(self._manual_add_clicked)
 
         layout.addLayout(form)
+        layout.addSpacing(8)
         layout.addWidget(btn_add, alignment=QtCore.Qt.AlignRight)
-        return w
+        layout.addStretch()
+
+        outer_layout.addWidget(scroll)
+        return outer
 
     def _browse_manual_image(self):
         fn, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -399,17 +430,27 @@ class AddQuestionsPage(QtWidgets.QWidget):
             self.m_expl.setPlainText("")
             self.m_image_path.setText("")
 
-            # Auto-update bank after add
             self._rebuild_bank_async()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Add failed", str(e))
 
-    # -------- Paste JSON --------
+    # -------- Paste JSON (also scroll-safe) --------
     def _build_json_tab(self) -> QtWidgets.QWidget:
-        w = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(w)
-        layout.setSpacing(10)
+        outer = QtWidgets.QWidget()
+        outer_layout = QtWidgets.QVBoxLayout(outer)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+        content = QtWidgets.QWidget()
+        scroll.setWidget(content)
+
+        layout = QtWidgets.QVBoxLayout(content)
+        layout.setSpacing(12)
+        layout.setContentsMargins(12, 12, 12, 12)
 
         info = QtWidgets.QLabel(
             "Paste a single question object OR a list of objects.\n"
@@ -419,6 +460,7 @@ class AddQuestionsPage(QtWidgets.QWidget):
         info.setWordWrap(True)
 
         self.json_text = QtWidgets.QPlainTextEdit()
+        self.json_text.setMinimumHeight(260)
         self.json_text.setPlaceholderText(
             "{\n"
             '  "topic": "Decimals",\n'
@@ -433,12 +475,16 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
         btn_add = QtWidgets.QPushButton("Add JSON to questions.json")
         btn_add.setObjectName("btnPrimary")
+        btn_add.setMinimumHeight(48)
         btn_add.clicked.connect(self._add_json_clicked)
 
         layout.addWidget(info)
         layout.addWidget(self.json_text)
         layout.addWidget(btn_add, alignment=QtCore.Qt.AlignRight)
-        return w
+        layout.addStretch()
+
+        outer_layout.addWidget(scroll)
+        return outer
 
     def _add_json_clicked(self):
         try:
@@ -463,19 +509,17 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
             save_question_bank(bank)
             self.status.setText(f"✅ Added {added} question(s) to {QUESTIONS_PATH.name}")
-
-            # Auto-update bank after add
             self._rebuild_bank_async()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Add failed", str(e))
 
     # -------- Import Images --------
-    # -------- Import Images --------
     def _build_images_tab(self) -> QtWidgets.QWidget:
         w = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(w)
-        layout.setSpacing(10)
+        layout.setSpacing(12)
+        layout.setContentsMargins(12, 12, 12, 12)
 
         info = QtWidgets.QLabel(
             "This copies images into cropped_questions/ for your OCR ingest script.\n"
@@ -486,8 +530,11 @@ class AddQuestionsPage(QtWidgets.QWidget):
         info.setWordWrap(True)
 
         row = QtWidgets.QHBoxLayout()
+        row.setSpacing(10)
+
         btn_pick = QtWidgets.QPushButton("Choose Image Files…")
         btn_pick.setObjectName("btnSecondary")
+        btn_pick.setMinimumHeight(44)
         btn_pick.clicked.connect(self._pick_images)
 
         self.chk_rename = QtWidgets.QCheckBox("Auto-rename to Q###.ext (recommended)")
@@ -497,9 +544,8 @@ class AddQuestionsPage(QtWidgets.QWidget):
         row.addWidget(self.chk_rename)
         row.addStretch()
 
-        # Table: File | Answer (1-4)
         self.img_table = QtWidgets.QTableWidget(0, 2)
-        self.img_table.setMinimumHeight(240)
+        self.img_table.setMinimumHeight(280)
         self.img_table.setHorizontalHeaderLabels(["File", "Answer (1-4, blank=unknown)"])
         self.img_table.verticalHeader().setVisible(False)
         self.img_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -508,6 +554,8 @@ class AddQuestionsPage(QtWidgets.QWidget):
             | QtWidgets.QAbstractItemView.EditKeyPressed
             | QtWidgets.QAbstractItemView.AnyKeyPressed
         )
+        self.img_table.setAlternatingRowColors(True)
+        self.img_table.verticalHeader().setDefaultSectionSize(34)
 
         header = self.img_table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -515,6 +563,7 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
         btn_copy = QtWidgets.QPushButton("Copy into cropped_questions/ (and save answers)")
         btn_copy.setObjectName("btnPrimaryAlt")
+        btn_copy.setMinimumHeight(48)
         btn_copy.clicked.connect(self._copy_images)
 
         layout.addWidget(info)
@@ -537,12 +586,10 @@ class AddQuestionsPage(QtWidgets.QWidget):
         self.img_table.setRowCount(len(files))
 
         for r, f in enumerate(files):
-            # File path (read-only)
             item_path = QtWidgets.QTableWidgetItem(f)
             item_path.setFlags(item_path.flags() & ~QtCore.Qt.ItemIsEditable)
             self.img_table.setItem(r, 0, item_path)
 
-            # Answer input (editable). User types 1-4 or blank.
             item_ans = QtWidgets.QTableWidgetItem("")
             item_ans.setTextAlignment(QtCore.Qt.AlignCenter)
             self.img_table.setItem(r, 1, item_ans)
@@ -553,11 +600,9 @@ class AddQuestionsPage(QtWidgets.QWidget):
             if not t:
                 return None
 
-            # Allow A/B/C/D as convenience
             if t in ("A", "B", "C", "D"):
                 return {"A": 1, "B": 2, "C": 3, "D": 4}[t]
 
-            # Allow 0-3 or 1-4
             try:
                 n = int(t)
             except Exception:
@@ -591,20 +636,17 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
                 suffix = src.suffix.lower()
 
-                # IMPORTANT: answers map only makes sense if we control the qid via rename
                 if self.chk_rename.isChecked():
                     dest = CROPPED_DIR / f"Q{qid:03d}{suffix}"
                 else:
                     dest = CROPPED_DIR / src.name
 
-                # avoid overwriting
                 if dest.exists() and dest.resolve() != src.resolve():
                     dest = CROPPED_DIR / f"{dest.stem}_{int(time.time())}{dest.suffix}"
 
                 shutil.copy2(str(src), str(dest))
                 copied += 1
 
-                # Save answer mapping for this qid (only if rename enabled)
                 if self.chk_rename.isChecked():
                     parsed = _parse_answer(ans_text)
                     if parsed is not None:
@@ -612,7 +654,6 @@ class AddQuestionsPage(QtWidgets.QWidget):
 
                     qid += 1  # increment only when rename drives qid sequence
 
-            # Merge answers into answers_map.json
             if self.chk_rename.isChecked() and answers_to_save:
                 existing = {}
                 if ANSWERS_MAP_PATH.exists():
@@ -641,9 +682,7 @@ class AddQuestionsPage(QtWidgets.QWidget):
                 msg += " Updating bank (ingest + cluster)…"
                 self.status.setText(msg)
 
-                # Auto-update bank after import images
                 self._rebuild_bank_async()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Copy failed", str(e))
-

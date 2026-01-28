@@ -114,41 +114,90 @@ QTabBar::tab:selected {
     margin-top: 6px;
 }
 
-/* ---------- Inputs ---------- */
+/* ---------- Inputs (compact) ---------- */
+
+/* Combo boxes */
 QComboBox#combo {
     padding: 6px 10px;
-    border-radius: 10px;
+    min-height: 30px;
+    font-size: 13px;
+
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.10);
     color: #E5E7EB;
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-QComboBox#combo::drop-down {
-    border: none;
-}
-
-QComboBox#combo QAbstractItemView {
-    background: #111827;
-    color: #E5E7EB;
-    selection-background-color: rgba(59, 130, 246, 0.35);
-}
-
+/* Spin boxes */
 QSpinBox#spin {
     padding: 6px 10px;
-    border-radius: 10px;
+    min-height: 30px;
+    font-size: 13px;
+
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.10);
     color: #E5E7EB;
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-QLineEdit, QPlainTextEdit, QListWidget {
-    border-radius: 10px;
+/* Single-line inputs */
+QLineEdit {
+    padding: 6px 10px;
+    min-height: 30px;
+    font-size: 13px;
+
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.08);
     color: #E5E7EB;
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
+
+/* Multi-line inputs */
+QPlainTextEdit {
+    padding: 8px 10px;
+    min-height: 80px;
+    font-size: 13px;
+
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #E5E7EB;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- Tables ---------- */
+QTableWidget {
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #E5E7EB;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    gridline-color: rgba(255, 255, 255, 0.10);
+}
+
+QHeaderView::section {
+    background: rgba(255, 255, 255, 0.08);
+    color: #E5E7EB;
+    padding: 8px 10px;
+    border: none;
+}
+
+/* ---------- Checkboxes ---------- */
+QCheckBox {
+    color: #E5E7EB;
+    spacing: 8px;
+}
+
 /* ---------- Labels ---------- */
+/* Keep labels readable without nuking titles (titles already have #title styles) */
 QLabel {
-    color: #FFFFFF;
+    color: #E5E7EB;
+}
+
+/* ---------- Scroll Areas (fix white background bug) ---------- */
+QScrollArea {
+    background: transparent;
+}
+
+QScrollArea > QWidget > QWidget {
+    background: transparent;
 }
 """
