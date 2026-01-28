@@ -58,6 +58,10 @@ def overlay_requests_pause() -> bool:
         return False
 
 
+def _scaled(v: int | float) -> int:
+    return int(round(float(v) * float(S.UI_SCALE)))
+
+
 class ExpOrb:
     def __init__(self, pos: Vector2, value: int):
         self.pos = Vector2(pos)
@@ -81,10 +85,6 @@ def format_time(seconds: float) -> str:
     return f"{mm:02d}:{ss:02d}"
 
 
-def _scaled(v: int | float) -> int:
-    return int(round(float(v) * float(S.UI_SCALE)))
-
-
 class Game:
     def __init__(self, screen: pygame.Surface):
         self.screen = screen
@@ -102,6 +102,9 @@ class Game:
         self.font = pygame.font.SysFont("consolas", 20)
         self.font_big = pygame.font.SysFont("consolas", 44, bold=True)
         self.font_mid = pygame.font.SysFont("consolas", 28, bold=True)
+
+        # ✅ Back button (top-left) settings
+        self.back_btn_rect = pygame.Rect(18, 18, 190, 44)
 
         self.state = "start"  # start, playing, levelup, gameover
         self.reset_run()
@@ -132,6 +135,10 @@ class Game:
         # overlay pause state
         self.overlay_paused = False
 
+    # ✅ Exit game back to launcher
+    def exit_to_launcher(self):
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
+
     def run(self):
         running = True
         while running:
@@ -145,7 +152,16 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
 
+                # ✅ ESC always exits back to launcher
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    running = False
+
+                # ✅ Click "Back to Launcher" on start screen
                 if self.state == "start":
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        if self.back_btn_rect.collidepoint(event.pos):
+                            running = False
+
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                         self.reset_run()
                         self.state = "playing"
@@ -376,6 +392,24 @@ class Game:
             label = self.font_mid.render("PAUSED (Overlay)", True, S.WHITE)
             surf.blit(label, (self.sw / 2 - label.get_width() / 2, 90))
 
+    # ✅ Draw back button (only on start screen)
+    def draw_back_button(self, surf: pygame.Surface):
+        mx, my = pygame.mouse.get_pos()
+        hovered = self.back_btn_rect.collidepoint((mx, my))
+
+        bg = (255, 255, 255, 60) if hovered else (255, 255, 255, 30)
+        border = (255, 255, 255, 120) if hovered else (255, 255, 255, 80)
+
+        btn_surf = pygame.Surface((self.back_btn_rect.w, self.back_btn_rect.h), pygame.SRCALPHA)
+        btn_surf.fill((0, 0, 0, 0))
+        pygame.draw.rect(btn_surf, bg, (0, 0, self.back_btn_rect.w, self.back_btn_rect.h), border_radius=12)
+        pygame.draw.rect(btn_surf, border, (0, 0, self.back_btn_rect.w, self.back_btn_rect.h), width=2, border_radius=12)
+
+        txt = self.font.render("← Back to Launcher", True, (235, 235, 235))
+        btn_surf.blit(txt, (12, (self.back_btn_rect.h - txt.get_height()) // 2))
+
+        surf.blit(btn_surf, (self.back_btn_rect.x, self.back_btn_rect.y))
+
     def draw_levelup_overlay(self, surf: pygame.Surface):
         overlay = pygame.Surface((self.sw, self.sh), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
@@ -432,6 +466,10 @@ class Game:
 
     def draw_start(self, surf: pygame.Surface):
         surf.fill(S.BLACK)
+
+        # ✅ Back button (start screen only)
+        self.draw_back_button(surf)
+
         title = self.font_big.render("SURVIVOR CLONE", True, S.WHITE)
         surf.blit(title, (self.sw / 2 - title.get_width() / 2, 140))
 
@@ -446,6 +484,9 @@ class Game:
 
         tip = self.font.render("Tip: overlay can pause by writing overlay_pause.txt in project root.", True, (120, 120, 140))
         surf.blit(tip, (self.sw / 2 - tip.get_width() / 2, 330))
+
+        esc = self.font.render("Press ESC anytime to return to Launcher", True, (120, 120, 140))
+        surf.blit(esc, (self.sw / 2 - esc.get_width() / 2, 360))
 
     def draw_gameover(self, surf: pygame.Surface):
         surf.fill(S.BLACK)
@@ -465,6 +506,9 @@ class Game:
 
         hint = self.font.render("Press R to return to Start Screen", True, S.GRAY)
         surf.blit(hint, (self.sw / 2 - hint.get_width() / 2, 450))
+
+        esc = self.font.render("Press ESC to return to Launcher", True, (120, 120, 140))
+        surf.blit(esc, (self.sw / 2 - esc.get_width() / 2, 485))
 
     def draw(self):
         if self.state == "start":
