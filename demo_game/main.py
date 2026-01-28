@@ -81,11 +81,24 @@ def format_time(seconds: float) -> str:
     return f"{mm:02d}:{ss:02d}"
 
 
+def _scaled(v: int | float) -> int:
+    return int(round(float(v) * float(S.UI_SCALE)))
+
+
 class Game:
     def __init__(self, screen: pygame.Surface):
         self.screen = screen
         self.clock = pygame.time.Clock()
 
+        # Keep actual fullscreen size (used everywhere)
+        self.sw, self.sh = self.screen.get_size()
+
+        # HUD fonts (ALL driven by settings.py)
+        self.ui_font_small = pygame.font.SysFont("consolas", _scaled(S.UI_FONT_SMALL))
+        self.ui_font_med = pygame.font.SysFont("consolas", _scaled(S.UI_FONT_MEDIUM), bold=True)
+        self.ui_font_big = pygame.font.SysFont("consolas", _scaled(S.UI_FONT_LARGE), bold=True)
+
+        # Existing menu fonts (can stay as-is, not part of HUD requirement)
         self.font = pygame.font.SysFont("consolas", 20)
         self.font_big = pygame.font.SysFont("consolas", 44, bold=True)
         self.font_mid = pygame.font.SysFont("consolas", 28, bold=True)
@@ -110,7 +123,7 @@ class Game:
         self.pending_choices = []
 
         # camera = top-left world coordinate for screen
-        self.camera = Vector2(self.player.pos.x - S.WIDTH / 2, self.player.pos.y - S.HEIGHT / 2)
+        self.camera = Vector2(self.player.pos.x - self.sw / 2, self.player.pos.y - self.sh / 2)
 
         # screenshake
         self.shake = 0.0
@@ -172,7 +185,6 @@ class Game:
         return Vector2(mx, my) + self.camera  # camera is top-left world
 
     def aim_dir_world(self) -> Vector2:
-        # player -> mouse in world space
         mw = self.mouse_world_pos()
         v = mw - self.player.pos
         if v.length_squared() > 0:
@@ -180,8 +192,7 @@ class Game:
         return Vector2(1, 0)
 
     def update_camera(self, dt: float):
-        target = Vector2(self.player.pos.x - S.WIDTH / 2, self.player.pos.y - S.HEIGHT / 2)
-        # smooth camera
+        target = Vector2(self.player.pos.x - self.sw / 2, self.player.pos.y - self.sh / 2)
         self.camera += (target - self.camera) * min(1.0, 8.5 * dt)
 
         # screenshake
@@ -201,14 +212,12 @@ class Game:
         keys = pygame.key.get_pressed()
         self.player.update(dt, keys)
 
-        # camera
         self.update_camera(dt)
 
         # Spawn scaling
         spawn_interval = max(0.12, self.base_spawn_interval * (1.0 - 0.55 * self.difficulty))
         self.spawn_timer -= dt
         if self.spawn_timer <= 0:
-            # spawn count ramps
             extra = int(self.difficulty * 0.9)
             spawn_count = 1 + min(5, extra // 2)
             for _ in range(spawn_count):
@@ -258,7 +267,6 @@ class Game:
             self.orbs.remove(orb)
             leveled = self.player.add_exp(orb.value)
             if leveled:
-                # Pause gameplay completely for selection
                 self.pending_choices = self.upgrades.roll_choices(3)
                 self.state = "levelup"
                 break
@@ -268,8 +276,8 @@ class Game:
 
         left = cam.x
         top = cam.y
-        right = cam.x + S.WIDTH
-        bottom = cam.y + S.HEIGHT
+        right = cam.x + self.sw
+        bottom = cam.y + self.sh
 
         gx0 = int(math.floor(left / S.GRID_SPACING) * S.GRID_SPACING)
         gy0 = int(math.floor(top / S.GRID_SPACING) * S.GRID_SPACING)
@@ -279,54 +287,110 @@ class Game:
         x = gx0
         while x < right:
             sx = int(x - cam.x)
-            pygame.draw.line(surf, S.GRID_COLOR, (sx, 0), (sx, S.HEIGHT), 1)
+            pygame.draw.line(surf, S.GRID_COLOR, (sx, 0), (sx, self.sh), 1)
             x += S.GRID_SPACING
 
         y = gy0
         while y < bottom:
             sy = int(y - cam.y)
-            pygame.draw.line(surf, S.GRID_COLOR, (0, sy), (S.WIDTH, sy), 1)
+            pygame.draw.line(surf, S.GRID_COLOR, (0, sy), (self.sw, sy), 1)
             y += S.GRID_SPACING
 
+    def _draw_bar(self, surf: pygame.Surface, x: int, y: int, w: int, h: int, ratio: float, fg, label: str):
+        ratio = max(0.0, min(1.0, ratio))
+        r = _scaled(S.UI_BAR_RADIUS)
+
+        # background
+        pygame.draw.rect(surf, S.UI_BG_DARK, (x, y, w, h), border_radius=r)
+        pygame.draw.rect(surf, S.UI_BG_LIGHT, (x, y, w, h), width=2, border_radius=r)
+
+        # fill
+        fill_w = int(w * ratio)
+        if fill_w > 0:
+            pygame.draw.rect(surf, fg, (x, y, fill_w, h), border_radius=r)
+
+        # text
+        txt = self.ui_font_small.render(label, True, S.UI_TEXT)
+        surf.blit(txt, (x + _scaled(10), y + (h - txt.get_height()) // 2))
+
     def draw_ui(self, surf: pygame.Surface):
+        # All HUD layout comes from settings.py
+        x0 = _scaled(S.UI_MARGIN_X)
+        y0 = _scaled(S.UI_MARGIN_Y)
+        gap = _scaled(S.UI_ROW_GAP)
+
+        bar_w = _scaled(S.UI_BAR_W)
+        bar_h = _scaled(S.UI_BAR_H)
+
+        y = y0
+
         # HP bar
-        hp_ratio = max(0.0, self.player.hp / max(1e-6, self.player.max_hp))
-        pygame.draw.rect(surf, (30, 30, 30), (18, 16, S.UI_BAR_W, S.UI_BAR_H))
-        pygame.draw.rect(surf, S.RED, (18, 16, int(S.UI_BAR_W * hp_ratio), S.UI_BAR_H))
-        surf.blit(self.font.render(f"HP {int(self.player.hp)}/{int(self.player.max_hp)}", True, S.WHITE), (24, 14))
+        if S.SHOW_HP:
+            hp_ratio = max(0.0, self.player.hp / max(1e-6, self.player.max_hp))
+            self._draw_bar(
+                surf,
+                x0,
+                y,
+                bar_w,
+                bar_h,
+                hp_ratio,
+                S.UI_HP,
+                f"HP {int(self.player.hp)}/{int(self.player.max_hp)}",
+            )
+            y += bar_h + gap
 
-        # EXP bar
-        exp_ratio = self.player.exp_ratio()
-        y = 44
-        pygame.draw.rect(surf, (30, 30, 30), (18, y, S.UI_BAR_W, S.UI_BAR_H))
-        pygame.draw.rect(surf, S.GREEN, (18, y, int(S.UI_BAR_W * exp_ratio), S.UI_BAR_H))
-        surf.blit(self.font.render(f"LV {self.player.level}  EXP {self.player.exp}/{self.player.exp_to_next}", True, S.WHITE), (24, y - 2))
+        # EXP bar (and level text)
+        if S.SHOW_EXP:
+            exp_ratio = self.player.exp_ratio()
+            label = f"EXP {self.player.exp}/{self.player.exp_to_next}"
+            if S.SHOW_LEVEL:
+                label = f"LV {self.player.level}  " + label
 
-        # Timer / kills
-        t = format_time(self.survival_time)
-        surf.blit(self.font.render(f"Time: {t}", True, S.WHITE), (S.WIDTH - 160, 16))
-        surf.blit(self.font.render(f"Kills: {self.player.kills}", True, S.WHITE), (S.WIDTH - 160, 42))
+            self._draw_bar(
+                surf,
+                x0,
+                y,
+                bar_w,
+                bar_h,
+                exp_ratio,
+                S.UI_EXP,
+                label,
+            )
+            y += bar_h + gap
 
-        # Overlay pause indicator
+        # Time
+        if S.SHOW_TIMER:
+            t = format_time(self.survival_time)
+            txt = self.ui_font_med.render(f"Time: {t}", True, S.UI_TEXT)
+            surf.blit(txt, (x0, y))
+            y += txt.get_height() + gap
+
+        # Kills
+        if S.SHOW_KILLS:
+            txt = self.ui_font_med.render(f"Kills: {self.player.kills}", True, S.UI_TEXT)
+            surf.blit(txt, (x0, y))
+            y += txt.get_height() + gap
+
+        # Overlay pause indicator (center top-ish)
         if self.state == "playing" and self.overlay_paused:
             label = self.font_mid.render("PAUSED (Overlay)", True, S.WHITE)
-            surf.blit(label, (S.WIDTH / 2 - label.get_width() / 2, 90))
+            surf.blit(label, (self.sw / 2 - label.get_width() / 2, 90))
 
     def draw_levelup_overlay(self, surf: pygame.Surface):
-        overlay = pygame.Surface((S.WIDTH, S.HEIGHT), pygame.SRCALPHA)
+        overlay = pygame.Surface((self.sw, self.sh), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
         surf.blit(overlay, (0, 0))
 
         title = self.font_big.render("LEVEL UP!", True, S.WHITE)
-        surf.blit(title, (S.WIDTH / 2 - title.get_width() / 2, 70))
+        surf.blit(title, (self.sw / 2 - title.get_width() / 2, 70))
 
         hint = self.font.render("Pick 1 upgrade: press 1 / 2 / 3", True, S.WHITE)
-        surf.blit(hint, (S.WIDTH / 2 - hint.get_width() / 2, 135))
+        surf.blit(hint, (self.sw / 2 - hint.get_width() / 2, 135))
 
         card_w = 310
         card_h = 170
         gap = 28
-        start_x = (S.WIDTH - (3 * card_w + 2 * gap)) / 2
+        start_x = (self.sw - (3 * card_w + 2 * gap)) / 2
         y = 220
 
         for i, u in enumerate(self.pending_choices):
@@ -369,24 +433,24 @@ class Game:
     def draw_start(self, surf: pygame.Surface):
         surf.fill(S.BLACK)
         title = self.font_big.render("SURVIVOR CLONE", True, S.WHITE)
-        surf.blit(title, (S.WIDTH / 2 - title.get_width() / 2, 140))
+        surf.blit(title, (self.sw / 2 - title.get_width() / 2, 140))
 
         sub = self.font.render("WASD to move • Aim with mouse • Auto attacks", True, S.GRAY)
-        surf.blit(sub, (S.WIDTH / 2 - sub.get_width() / 2, 210))
+        surf.blit(sub, (self.sw / 2 - sub.get_width() / 2, 210))
 
         sub2 = self.font.render("Survive as long as possible • Space to start", True, S.GRAY)
-        surf.blit(sub2, (S.WIDTH / 2 - sub2.get_width() / 2, 240))
+        surf.blit(sub2, (self.sw / 2 - sub2.get_width() / 2, 240))
 
         info = self.font.render("Level-ups pause the game. Choose upgrades with 1/2/3.", True, S.GRAY)
-        surf.blit(info, (S.WIDTH / 2 - info.get_width() / 2, 290))
+        surf.blit(info, (self.sw / 2 - info.get_width() / 2, 290))
 
-        tip = self.font.render("Tip: your overlay can pause by writing overlay_pause.txt in project root.", True, (120, 120, 140))
-        surf.blit(tip, (S.WIDTH / 2 - tip.get_width() / 2, 330))
+        tip = self.font.render("Tip: overlay can pause by writing overlay_pause.txt in project root.", True, (120, 120, 140))
+        surf.blit(tip, (self.sw / 2 - tip.get_width() / 2, 330))
 
     def draw_gameover(self, surf: pygame.Surface):
         surf.fill(S.BLACK)
         title = self.font_big.render("GAME OVER", True, S.RED)
-        surf.blit(title, (S.WIDTH / 2 - title.get_width() / 2, 150))
+        surf.blit(title, (self.sw / 2 - title.get_width() / 2, 150))
 
         stats = [
             f"Time Survived: {format_time(self.survival_time)}",
@@ -396,11 +460,11 @@ class Game:
         y = 240
         for s in stats:
             txt = self.font_mid.render(s, True, S.WHITE)
-            surf.blit(txt, (S.WIDTH / 2 - txt.get_width() / 2, y))
+            surf.blit(txt, (self.sw / 2 - txt.get_width() / 2, y))
             y += 44
 
         hint = self.font.render("Press R to return to Start Screen", True, S.GRAY)
-        surf.blit(hint, (S.WIDTH / 2 - hint.get_width() / 2, 450))
+        surf.blit(hint, (self.sw / 2 - hint.get_width() / 2, 450))
 
     def draw(self):
         if self.state == "start":
@@ -435,7 +499,6 @@ class Game:
 
 
 def start_overlay_process():
-    # overlay_trigger.py is in PROJECT_ROOT (BRAINBUFF/)
     overlay_script = PROJECT_ROOT / "overlay_trigger.py"
 
     if not overlay_script.exists():
@@ -460,10 +523,14 @@ def main():
     pygame.display.set_caption(S.TITLE)
 
     info = pygame.display.Info()
+
+    # Fullscreen borderless at current monitor resolution
     screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.NOFRAME)
+
+    # Keep settings module in sync for any other modules that use S.WIDTH/S.HEIGHT
     S.WIDTH, S.HEIGHT = screen.get_size()
 
-    overlay_proc = start_overlay_process()  # <-- starts overlay_trigger.py
+    overlay_proc = start_overlay_process()
 
     try:
         Game(screen).run()

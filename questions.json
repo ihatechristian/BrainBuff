@@ -746,5 +746,22 @@
     "image": null,
     "source_image": "cropped_questions\\Q044.png",
     "needs_review": false
+  },
+  {
+    "qid": 45,
+    "topic": "PSLE",
+    "difficulty": "easy",
+    "question": "In3780,the digit 7 is in the _____ place.",
+    "choices": [
+      "ones",
+      "tens",
+      "hundreds (4 thousands",
+      "[UNREADABLE]"
+    ],
+    "answer_index": 2,
+    "explanation": "",
+    "image": null,
+    "source_image": "cropped_questions\\Q045.png",
+    "needs_review": true
   }
 ]
