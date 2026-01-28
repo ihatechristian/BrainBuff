@@ -147,4 +147,8 @@ QLineEdit, QPlainTextEdit, QListWidget {
     color: #E5E7EB;
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
+/* ---------- Labels ---------- */
+QLabel {
+    color: #FFFFFF;
+}
 """
