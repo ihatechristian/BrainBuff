@@ -38,17 +38,12 @@ class Player:
 
         # =========================
         # Sprite (player.png)
-        # Your folder layout:
-        #   BRAINBUFF/
-        #     images/player.png
-        #     demo_game/player.py  <-- this file
         # =========================
         self.sprite = None
         try:
             project_root = Path(__file__).resolve().parents[1]  # -> BRAINBUFF/
             img_path = project_root / "images" / "player.png"
             img = pygame.image.load(str(img_path)).convert_alpha()
-            # Scale based on PLAYER_RADIUS setting
             size = int(self.radius * 2.5)
             img = pygame.transform.smoothscale(img, (size, size))
             self.sprite = img
@@ -56,11 +51,9 @@ class Player:
             print("Player sprite load failed (fallback to circle):", e)
 
     def _exp_needed_for(self, level: int) -> int:
-        # gentle curve
         return int(45 + (level - 1) * 18 + (level - 1) ** 1.25 * 10)
 
     def add_exp(self, amount: int) -> bool:
-        """Returns True if leveled up (possibly multiple times, but we stop at first for pause UI)."""
         self.exp += amount
         if self.exp >= self.exp_to_next:
             self.exp -= self.exp_to_next
@@ -73,11 +66,16 @@ class Player:
         self.hp = min(self.max_hp, self.hp + amount)
 
     def take_damage(self, dmg: float):
+        """Hit-based damage (uses i-frames)."""
         if self.iframes > 0:
             return False
         self.hp -= dmg
         self.iframes = S.PLAYER_IFRAMES
         return True
+
+    def take_contact_damage(self, dmg: float):
+        """TRUE DPS damage (ignores i-frames)."""
+        self.hp -= dmg
 
     def is_dead(self) -> bool:
         return self.hp <= 0
@@ -86,7 +84,7 @@ class Player:
         return self.base_speed * self.move_speed_mult
 
     def update(self, dt: float, keys: pygame.key.ScancodeWrapper):
-        # i-frames
+        # i-frames countdown
         if self.iframes > 0:
             self.iframes = max(0.0, self.iframes - dt)
 
@@ -112,7 +110,7 @@ class Player:
         # blink during i-frames
         blink = (self.iframes > 0 and int(pygame.time.get_ticks() / 80) % 2 == 0)
 
-        # Aim direction based on mouse (convert screen mouse -> world by +camera)
+        # Aim direction based on mouse (screen → world)
         mx, my = pygame.mouse.get_pos()
         mouse_world = Vector2(mx, my) + camera
         aim = mouse_world - self.pos
@@ -121,15 +119,12 @@ class Player:
         else:
             aim = Vector2(1, 0)
 
-        # Draw sprite if available, else fallback to circle
         if self.sprite is not None:
-            # Rotate to face mouse
             angle_deg = -math.degrees(math.atan2(aim.y, aim.x))
             rotated = pygame.transform.rotate(self.sprite, angle_deg)
             rect = rotated.get_rect(center=(int(screen_pos.x), int(screen_pos.y)))
 
             if blink:
-                # make it semi-transparent during blink
                 tmp = rotated.copy()
                 tmp.set_alpha(110)
                 surf.blit(tmp, rect)
@@ -139,7 +134,7 @@ class Player:
             color = S.CYAN if not blink else S.WHITE
             pygame.draw.circle(surf, color, (int(screen_pos.x), int(screen_pos.y)), self.radius)
 
-        # tiny center dot (helps you see actual collision center)
+        # tiny center dot
         pygame.draw.circle(surf, (10, 10, 10), (int(screen_pos.x), int(screen_pos.y)), 3)
 
     def exp_ratio(self) -> float:

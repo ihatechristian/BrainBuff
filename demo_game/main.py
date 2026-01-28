@@ -228,14 +228,14 @@ class Game:
         for e in self.enemies:
             e.update(dt, self.player.pos)
 
-        # Contact damage
+        # ✅ Contact damage (TRUE DPS, ignores i-frames)
         for e in self.enemies:
             if circle_hit(self.player.pos, self.player.radius, e.pos, e.radius):
-                took = self.player.take_damage(S.ENEMY_CONTACT_DPS * dt)
-                if took and S.SHAKE_ON_HIT:
+                self.player.take_contact_damage(S.ENEMY_CONTACT_DPS * dt)
+                if S.SHAKE_ON_HIT:
                     self.shake = max(self.shake, S.SHAKE_STRENGTH)
 
-        # Weapons update
+        # Weapons update (player hurts enemies ONLY via bullets)
         aim_dir = self.aim_dir_world()
         mw = self.mouse_world_pos()
         self.weapons.update(dt, self.player, aim_dir, mw, self.enemies)
