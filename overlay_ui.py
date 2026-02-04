@@ -23,6 +23,147 @@ except Exception:
         image: Optional[str] = None
 
 
+# =====================================================
+# Mini Calculator (usable: C, backspace, equals, + - × ÷)
+# =====================================================
+class MiniCalculator(QtWidgets.QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Ensure it's clickable/usable even with an overlay that doesn't accept focus
+        self.setWindowFlags(
+            QtCore.Qt.Tool
+            | QtCore.Qt.FramelessWindowHint
+            | QtCore.Qt.WindowStaysOnTopHint
+        )
+        self.setWindowFlag(QtCore.Qt.WindowDoesNotAcceptFocus, False)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+
+        self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
+        self.setObjectName("calculator")
+
+        self._expr = ""
+
+        self.display = QtWidgets.QLineEdit()
+        self.display.setReadOnly(True)
+        self.display.setAlignment(QtCore.Qt.AlignRight)
+        self.display.setFixedHeight(36)
+
+        grid = QtWidgets.QGridLayout()
+        grid.setSpacing(8)
+
+        buttons = [
+            ("7", 0, 0), ("8", 0, 1), ("9", 0, 2), ("÷", 0, 3),
+            ("4", 1, 0), ("5", 1, 1), ("6", 1, 2), ("×", 1, 3),
+            ("1", 2, 0), ("2", 2, 1), ("3", 2, 2), ("−", 2, 3),
+            ("0", 3, 0), (".", 3, 1), ("⌫", 3, 2), ("+", 3, 3),
+            ("C", 4, 0), ("=", 4, 1),
+        ]
+
+        for text, r, c in buttons:
+            btn = QtWidgets.QPushButton(text)
+            btn.setFocusPolicy(QtCore.Qt.NoFocus)  # keep overlay feel
+            btn.setFixedSize(44, 44)
+            btn.clicked.connect(lambda _, t=text: self._press(t))
+
+            if text == "=":
+                grid.addWidget(btn, r, c, 1, 3)  # span 3 columns
+            else:
+                grid.addWidget(btn, r, c)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+        layout.addWidget(self.display)
+        layout.addLayout(grid)
+
+        # Styling (self-contained)
+        self.setStyleSheet("""
+            #calculator {
+                background: #111827;
+                border: 2px solid rgba(255,255,255,0.35);
+                border-radius: 16px;
+            }
+            QLineEdit {
+                background: rgba(255,255,255,0.08);
+                color: white;
+                border-radius: 10px;
+                padding: 8px;
+                border: 1px solid rgba(255,255,255,0.18);
+                font-size: 14px;
+                font-weight: 700;
+            }
+            QPushButton {
+                background: rgba(255,255,255,0.10);
+                color: white;
+                border-radius: 12px;
+                font-weight: 800;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background: rgba(255,255,255,0.20);
+            }
+            QPushButton:pressed {
+                background: rgba(59,130,246,0.25);
+            }
+        """)
+
+        self._update_display()
+
+    def _update_display(self):
+        self.display.setText(self._expr if self._expr else "0")
+
+    def _to_eval_expr(self) -> str:
+        return (
+            self._expr
+            .replace("×", "*")
+            .replace("÷", "/")
+            .replace("−", "-")
+        )
+
+    def _safe_eval(self, expr: str) -> float:
+        allowed = set("0123456789+-*/(). ")
+        if any(ch not in allowed for ch in expr):
+            raise ValueError("Invalid characters")
+        return eval(expr, {"__builtins__": {}}, {})
+
+    def _press(self, t: str):
+        if t == "C":
+            self._expr = ""
+            self._update_display()
+            return
+
+        if t == "⌫":
+            self._expr = self._expr[:-1]
+            self._update_display()
+            return
+
+        if t == "=":
+            try:
+                expr = self._to_eval_expr()
+                if not expr.strip():
+                    return
+                result = self._safe_eval(expr)
+                if abs(result - int(result)) < 1e-10:
+                    self._expr = str(int(result))
+                else:
+                    self._expr = str(round(result, 10)).rstrip("0").rstrip(".")
+            except Exception:
+                self._expr = "Error"
+            self._update_display()
+            return
+
+        if self._expr == "Error":
+            self._expr = ""
+
+        ops = {"+", "−", "×", "÷"}
+        if t in ops and (not self._expr or self._expr[-1] in ops):
+            return
+
+        self._expr += t
+        self._update_display()
+
+
 class OverlayWindow(QtWidgets.QWidget):
     """
     UI-only overlay window that supports an optional image path:
@@ -39,6 +180,9 @@ class OverlayWindow(QtWidgets.QWidget):
         self.on_answer = on_answer
         self.current_question: Optional[Question] = None
 
+        # Debug confirm
+        print("🔥 NEW OverlayWindow with calculator LOADED")
+
         # Store the original pixmap for clean rescaling on resize
         self._diagram_pixmap: Optional[QtGui.QPixmap] = None
 
@@ -47,27 +191,23 @@ class OverlayWindow(QtWidgets.QWidget):
         self._correct_index: Optional[int] = None
 
         # ---- Theme tokens (education overlay) ----
-        # Background
-        self.CARD_BG = "rgba(17, 24, 39, 235)"         # #111827 with alpha
+        self.CARD_BG = "rgba(17, 24, 39, 235)"
         self.CARD_BORDER = "rgba(255, 255, 255, 36)"
         self.DIAGRAM_BG = "rgba(255, 255, 255, 10)"
         self.DIAGRAM_BORDER = "rgba(255, 255, 255, 22)"
 
-        # Text
-        self.TEXT_MAIN = "#F9FAFB"                     # soft white
-        self.TEXT_SUB = "rgba(156, 163, 175, 220)"     # #9CA3AF
+        self.TEXT_MAIN = "#F9FAFB"
+        self.TEXT_SUB = "rgba(156, 163, 175, 220)"
         self.TEXT_HINT = "rgba(156, 163, 175, 200)"
 
-        # Accents
-        self.ACCENT = "#3B82F6"                        # blue
-        self.BUTTON_BG = "rgba(31, 41, 55, 210)"       # #1F2937-ish
-        self.BUTTON_HOVER = "rgba(55, 65, 81, 220)"    # #374151-ish
+        self.ACCENT = "#3B82F6"
+        self.BUTTON_BG = "rgba(31, 41, 55, 210)"
+        self.BUTTON_HOVER = "rgba(55, 65, 81, 220)"
         self.BUTTON_BORDER = "rgba(255, 255, 255, 18)"
 
-        # Feedback colors
-        self.GOOD = "#22C55E"                          # green
-        self.BAD = "#F87171"                           # soft red
-        self.WARN = "#FBBF24"                          # amber
+        self.GOOD = "#22C55E"
+        self.BAD = "#F87171"
+        self.WARN = "#FBBF24"
 
         self.setWindowFlags(
             QtCore.Qt.FramelessWindowHint
@@ -87,6 +227,23 @@ class OverlayWindow(QtWidgets.QWidget):
 
         self.title = QtWidgets.QLabel("BrainBuff")
         self.title.setObjectName("title")
+
+        # 🧮 Calculator icon/button (always available)
+        self.calc_btn = QtWidgets.QToolButton()
+        self.calc_btn.setText("🧮")
+        self.calc_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.calc_btn.setFixedSize(28, 28)
+        self.calc_btn.setToolTip("Calculator")
+        self.calc_btn.setStyleSheet("""
+            QToolButton {
+                background: rgba(255,255,255,0.12);
+                border-radius: 8px;
+                font-size: 16px;
+            }
+            QToolButton:hover {
+                background: rgba(255,255,255,0.25);
+            }
+        """)
 
         self.meta = QtWidgets.QLabel("")
         self.meta.setObjectName("meta")
@@ -120,7 +277,14 @@ class OverlayWindow(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self.card)
         layout.setContentsMargins(18, 16, 18, 14)
         layout.setSpacing(10)
-        layout.addWidget(self.title)
+
+        # Header row: title + calc icon on the right
+        header = QtWidgets.QHBoxLayout()
+        header.addWidget(self.title)
+        header.addStretch()
+        header.addWidget(self.calc_btn)
+
+        layout.addLayout(header)
         layout.addWidget(self.meta)
         layout.addWidget(self.question_label)
 
@@ -137,13 +301,29 @@ class OverlayWindow(QtWidgets.QWidget):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(self.card)
 
+        # Calculator window
+        self.calculator = MiniCalculator(self)
+        self.calculator.hide()
+        self.calc_btn.clicked.connect(self._toggle_calculator)
+
         self._apply_styles()
 
         # Default size (controller can override)
         self.resize(720, 520)
 
+    def _toggle_calculator(self):
+        if self.calculator.isVisible():
+            self.calculator.hide()
+            return
+
+        # place near top-right of overlay
+        pos = self.mapToGlobal(QtCore.QPoint(self.width() - 260, 60))
+        self.calculator.move(pos)
+        self.calculator.show()
+        self.calculator.raise_()
+        self.calculator.activateWindow()
+
     def _apply_styles(self):
-        # Global stylesheet uses theme tokens above
         self.setStyleSheet(f"""
             #card {{
                 background: {self.CARD_BG};
@@ -206,25 +386,18 @@ class OverlayWindow(QtWidgets.QWidget):
     def _resolve_image_path(self, img_path: str) -> str:
         if os.path.isabs(img_path):
             return img_path
-        # relative to where you run the script (project root)
         return os.path.join(os.getcwd(), img_path)
 
-    # ✅ NEW: cap diagram size based on screen to keep overlay readable
     def _diagram_max_size(self) -> QtCore.QSize:
         screen = QtWidgets.QApplication.primaryScreen()
         if not screen:
             return QtCore.QSize(900, 500)
         geo = screen.availableGeometry()
-
         max_w = int(geo.width() * 0.80)
-        max_h = int(geo.height() * 0.42)  # good for diagrams/tables
+        max_h = int(geo.height() * 0.42)
         return QtCore.QSize(max_w, max_h)
 
     def _available_diagram_box(self) -> QtCore.QSize:
-        """
-        Compute the box we can use for the diagram inside the current window,
-        accounting for margins and other widgets.
-        """
         box_w = max(120, self.card.width() - 40)
 
         fixed_h = 0
@@ -242,9 +415,7 @@ class OverlayWindow(QtWidgets.QWidget):
         box_h = max(120, int(self.height() - fixed_h))
         return QtCore.QSize(box_w, box_h)
 
-    # ✅ UPDATED: clamp scaling to BOTH box size + screen size
     def _render_diagram(self):
-        """Scale the original pixmap into the available box (KeepAspectRatio) with screen limits."""
         if not self._diagram_pixmap or self._diagram_pixmap.isNull():
             return
 
@@ -263,9 +434,6 @@ class OverlayWindow(QtWidgets.QWidget):
         self.image_label.setPixmap(scaled)
 
     def _auto_resize_for_diagram(self):
-        """
-        Increase window size (within screen limits) so the diagram has room.
-        """
         screen = QtWidgets.QApplication.primaryScreen()
         if not screen:
             return
@@ -278,10 +446,7 @@ class OverlayWindow(QtWidgets.QWidget):
         target_h = min(max_h, max(520, self.height()))
 
         if self._diagram_pixmap and not self._diagram_pixmap.isNull():
-            # slightly taller for diagrams, but not too tall
             target_h = min(max_h, max(target_h, int(geo.height() * 0.68)))
-
-            # allow wider overlay for wide tables/diagrams
             if self._diagram_pixmap.width() > 900:
                 target_w = min(max_w, max(target_w, 900))
 
@@ -315,12 +480,10 @@ class OverlayWindow(QtWidgets.QWidget):
             return
 
         self._diagram_pixmap = pix
-        self.image_label.setStyleSheet("")  # reset any warning style
+        self.image_label.setStyleSheet("")
         self.image_label.setVisible(True)
 
-        # Resize window to give the image space, then render scaled
         self._auto_resize_for_diagram()
-        # render after layout settles (important)
         QtCore.QTimer.singleShot(0, self._render_diagram)
 
     def resizeEvent(self, event: QtGui.QResizeEvent):
@@ -337,7 +500,7 @@ class OverlayWindow(QtWidgets.QWidget):
             b.setStyleSheet("")
         self._feedback_active = False
         self._correct_index = None
-        self.hint.setStyleSheet("")  # reset hint color too
+        self.hint.setStyleSheet("")
 
     def set_question(self, q: Question, source: str = "local", ai_mode: str = "off", snooze_minutes: int = 10):
         self.current_question = q
@@ -357,6 +520,9 @@ class OverlayWindow(QtWidgets.QWidget):
         self.hint.setText(
             f"Click choices • (Full app: 1–4 answer, F9 snooze {snooze_minutes}m, F10 mode {ai_mode.upper()})"
         )
+
+        # Calculator ALWAYS available
+        self.calc_btn.setVisible(True)
 
         QtCore.QTimer.singleShot(0, self._render_diagram)
 
@@ -387,7 +553,6 @@ class OverlayWindow(QtWidgets.QWidget):
 
 
 # -------------------- Standalone demo --------------------
-
 def demo_main():
     app = QtWidgets.QApplication([])
 
@@ -396,11 +561,10 @@ def demo_main():
     sample = Question(
         topic="Geometry",
         difficulty="medium",
-        question="Demo: The figure is made up of two squares and one quarter circle...",
-        image="images/Q5.png",
-        choices=["19.5 cm", "25 cm", "25.5 cm", "31 cm"],
+        question="Demo: What is 48 ÷ 6?",
+        choices=["6", "7", "8", "9"],
         answer_index=2,
-        explanation="Perimeter includes straight edges and the quarter-circle arc."
+        explanation="48 divided by 6 is 8."
     )
 
     def on_answer(idx: int):
