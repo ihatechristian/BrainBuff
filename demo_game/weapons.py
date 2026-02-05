@@ -46,8 +46,6 @@ class ProjectileWeapon:
 
         self.timer = 0.0
         self.projectiles: list[Projectile] = []
-        
-        # 🔊 Sound manager reference
         self.sound_manager = sound_manager
 
     def update(self, dt: float, player_pos: Vector2, aim_dir: Vector2, enemies: list):
@@ -73,17 +71,18 @@ class ProjectileWeapon:
         else:
             dir_vec = Vector2(1, 0)
 
-        # Fire a spread if multiple projectiles
+        if self.sound_manager:
+            self.sound_manager.play("shoot", volume_override=0.3)
+
         n = max(1, int(self.projectile_count))
-        spread = 0.20  # radians total-ish feel
+        spread = 0.20
         for i in range(n):
             if n == 1:
                 ang = 0.0
             else:
-                t = (i / (n - 1)) * 2 - 1  # -1..1
+                t = (i / (n - 1)) * 2 - 1
                 ang = t * spread
 
-            # rotate dir_vec by ang
             c = math.cos(ang)
             s = math.sin(ang)
             d = Vector2(dir_vec.x * c - dir_vec.y * s, dir_vec.x * s + dir_vec.y * c)
@@ -92,10 +91,6 @@ class ProjectileWeapon:
             self.projectiles.append(
                 Projectile(player_pos, vel, self.damage, self.projectile_lifetime)
             )
-
-        # 🔊 Play shoot sound
-        if self.sound_manager:
-            self.sound_manager.play("shoot", volume_override=0.3)
 
         self.timer = self.cooldown
 

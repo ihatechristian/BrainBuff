@@ -12,8 +12,6 @@ class Enemy:
     def __init__(self, pos: Vector2, kind: str, difficulty: float, sound_manager=None):
         self.pos = Vector2(pos)
         self.kind = kind
-        
-        # 🔊 Sound manager reference
         self.sound_manager = sound_manager
 
         # Base stats per type
@@ -36,8 +34,6 @@ class Enemy:
         self.speed = base_speed * (1.0 + 0.35 * difficulty)
 
         self.alive = True
-
-        # 🔥 Hit flash timer (seconds)
         self.hit_flash = 0.0
 
         # =========================
@@ -62,15 +58,12 @@ class Enemy:
 
         if self.hp <= 0:
             self.alive = False
-            
-            # 🔊 Play death sound
+
             if self.sound_manager:
-                self.sound_manager.play("enemy_die", volume_override=0.4)
-            
+                self.sound_manager.play_immediate("enemy_die", volume_override=0.4)
+
             return True
         else:
-            # 🔊 Optional: play hit sound when damaged but not dead
-            # Comment this out if too spammy
             if self.sound_manager:
                 self.sound_manager.play("enemy_hit", volume_override=0.2)
         
@@ -93,11 +86,9 @@ class Enemy:
     def draw(self, surf: pygame.Surface, camera: Vector2):
         p = self.pos - camera
 
-        # Draw sprite (with hit flash) or fallback to circle
         if self.sprite is not None:
             img = self.sprite
 
-            # ⚡ flash effect: overlay a white-tinted copy briefly
             if self.hit_flash > 0:
                 # Create a white "flash" version quickly
                 flash = img.copy()

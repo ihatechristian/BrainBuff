@@ -28,7 +28,7 @@ from player import Player
 from enemy import spawn_enemy_at_screen_edge
 from weapons import WeaponSystem
 from upgrades import UpgradeManager
-from sound_manager import SoundManager  # 🔊 NEW IMPORT
+from sound_manager import SoundManager
 
 # ============================================================
 # Overlay pause bridge (ABSOLUTE PATH to project root)
@@ -107,7 +107,6 @@ class Game:
         # ✅ Back button (top-left) settings
         self.back_btn_rect = pygame.Rect(18, 18, 190, 44)
 
-        # 🔊 Initialize sound manager
         self.sound_manager = SoundManager()
 
         self.state = "start"  # start, playing, levelup, gameover
@@ -115,7 +114,7 @@ class Game:
 
     def reset_run(self):
         self.player = Player(Vector2(0, 0))
-        self.weapons = WeaponSystem(self.sound_manager)  # 🔊 Pass sound manager
+        self.weapons = WeaponSystem(self.sound_manager)
         self.upgrades = UpgradeManager(self)
 
         self.enemies: list = []
@@ -252,9 +251,8 @@ class Game:
             if circle_hit(self.player.pos, self.player.radius, e.pos, e.radius):
                 self.player.take_contact_damage(S.ENEMY_CONTACT_DPS * dt)
                 
-                # 🔊 Play hit sound occasionally to avoid spam
-                if random.random() < 0.05:  # 5% chance per frame when touching
-                    self.sound_manager.play("player_hit", volume_override=0.5)
+                if random.random() < 0.05:
+                    self.sound_manager.play_immediate("player_hit", volume_override=0.5)
                 
                 if S.SHAKE_ON_HIT:
                     self.shake = max(self.shake, S.SHAKE_STRENGTH * 0.4)
@@ -266,8 +264,7 @@ class Game:
                 self.orbs.remove(orb)
                 
                 if leveled_up:
-                    # 🔊 Play level up sound
-                    self.sound_manager.play("level_up", volume_override=0.6)
+                    self.sound_manager.play_immediate("level_up", volume_override=0.6)
                     
                     self.pending_choices = self.upgrades.roll_choices(3)
                     if self.pending_choices:
@@ -279,12 +276,11 @@ class Game:
             spawn_rate = self.base_spawn_interval / (1.0 + 0.5 * self.difficulty)
             self.spawn_timer = spawn_rate
             
-            # 🔊 Pass sound manager to enemy spawning
             enemy = spawn_enemy_at_screen_edge(
-                self.player.pos, 
-                self.camera, 
+                self.player.pos,
+                self.camera,
                 self.difficulty,
-                self.sound_manager  # Add this parameter
+                self.sound_manager
             )
             self.enemies.append(enemy)
 
