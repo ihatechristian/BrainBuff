@@ -36,7 +36,7 @@ class ProjectileWeapon:
     Auto-shoots toward mouse direction (world-space).
     Supports projectile_count (spread) if you keep that upgrade.
     """
-    def __init__(self):
+    def __init__(self, sound_manager=None):
         self.level = 1
         self.damage = S.PROJ_BASE_DAMAGE
         self.cooldown = S.PROJ_BASE_COOLDOWN
@@ -46,6 +46,9 @@ class ProjectileWeapon:
 
         self.timer = 0.0
         self.projectiles: list[Projectile] = []
+        
+        # 🔊 Sound manager reference
+        self.sound_manager = sound_manager
 
     def update(self, dt: float, player_pos: Vector2, aim_dir: Vector2, enemies: list):
         # Update projectiles + collision
@@ -90,6 +93,10 @@ class ProjectileWeapon:
                 Projectile(player_pos, vel, self.damage, self.projectile_lifetime)
             )
 
+        # 🔊 Play shoot sound
+        if self.sound_manager:
+            self.sound_manager.play("shoot", volume_override=0.3)
+
         self.timer = self.cooldown
 
     def draw(self, surf: pygame.Surface, camera: Vector2, player_pos: Vector2, aim_dir: Vector2):
@@ -112,8 +119,8 @@ class WeaponSystem:
     """
     Projectile-only weapon system (no blades/swords, no lightning).
     """
-    def __init__(self):
-        self.projectile = ProjectileWeapon()
+    def __init__(self, sound_manager=None):
+        self.projectile = ProjectileWeapon(sound_manager)
 
     def update(self, dt: float, player, aim_dir: Vector2, mouse_world: Vector2, enemies: list):
         # Only shooting

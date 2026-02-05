@@ -9,9 +9,12 @@ import settings as S
 
 
 class Enemy:
-    def __init__(self, pos: Vector2, kind: str, difficulty: float):
+    def __init__(self, pos: Vector2, kind: str, difficulty: float, sound_manager=None):
         self.pos = Vector2(pos)
         self.kind = kind
+        
+        # 🔊 Sound manager reference
+        self.sound_manager = sound_manager
 
         # Base stats per type
         if kind == "runner":
@@ -39,10 +42,6 @@ class Enemy:
 
         # =========================
         # Sprite (enemy.png)
-        # Folder layout:
-        #   BRAINBUFF/
-        #     images/enemy.png
-        #     demo_game/enemy.py  <-- this file
         # =========================
         self.sprite = None
         try:
@@ -63,7 +62,18 @@ class Enemy:
 
         if self.hp <= 0:
             self.alive = False
+            
+            # 🔊 Play death sound
+            if self.sound_manager:
+                self.sound_manager.play("enemy_die", volume_override=0.4)
+            
             return True
+        else:
+            # 🔊 Optional: play hit sound when damaged but not dead
+            # Comment this out if too spammy
+            if self.sound_manager:
+                self.sound_manager.play("enemy_hit", volume_override=0.2)
+        
         return False
 
     def update(self, dt: float, player_pos: Vector2):
@@ -89,7 +99,7 @@ class Enemy:
 
             # ⚡ flash effect: overlay a white-tinted copy briefly
             if self.hit_flash > 0:
-                # Create a white “flash” version quickly
+                # Create a white "flash" version quickly
                 flash = img.copy()
                 flash.fill((255, 255, 255, 0), special_flags=pygame.BLEND_RGBA_MULT)
                 flash.fill((255, 255, 255, 0), special_flags=pygame.BLEND_RGBA_ADD)
@@ -113,7 +123,7 @@ class Enemy:
         pygame.draw.rect(surf, (80, 220, 110), (x, y, int(w * ratio), h))
 
 
-def spawn_enemy_at_screen_edge(player_pos: Vector2, camera: Vector2, difficulty: float) -> Enemy:
+def spawn_enemy_at_screen_edge(player_pos: Vector2, camera: Vector2, difficulty: float, sound_manager=None) -> Enemy:
     """
     Spawn outside visible screen edges in WORLD space.
     camera is top-left world coordinate of screen.
@@ -136,4 +146,6 @@ def spawn_enemy_at_screen_edge(player_pos: Vector2, camera: Vector2, difficulty:
     else:
         pos = Vector2(random.uniform(camera.x, camera.x + S.WIDTH), bottom)
 
-    return Enemy(pos, kind, difficulty)
+    return Enemy(pos, kind, difficulty, sound_manager)
+
+

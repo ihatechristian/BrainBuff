@@ -28,6 +28,7 @@ from player import Player
 from enemy import spawn_enemy_at_screen_edge
 from weapons import WeaponSystem
 from upgrades import UpgradeManager
+from sound_manager import SoundManager  # 🔊 NEW IMPORT
 
 # ============================================================
 # Overlay pause bridge (ABSOLUTE PATH to project root)
@@ -106,12 +107,15 @@ class Game:
         # ✅ Back button (top-left) settings
         self.back_btn_rect = pygame.Rect(18, 18, 190, 44)
 
+        # 🔊 Initialize sound manager
+        self.sound_manager = SoundManager()
+
         self.state = "start"  # start, playing, levelup, gameover
         self.reset_run()
 
     def reset_run(self):
         self.player = Player(Vector2(0, 0))
-        self.weapons = WeaponSystem()
+        self.weapons = WeaponSystem(self.sound_manager)  # 🔊 Pass sound manager
         self.upgrades = UpgradeManager(self)
 
         self.enemies: list = []
@@ -223,127 +227,130 @@ class Game:
 
     def update_playing(self, dt: float):
         self.survival_time += dt
-        self.difficulty += S.DIFFICULTY_RAMP_PER_SEC * dt
+        self.difficulty = self.survival_time * S.DIFFICULTY_RAMP_PER_SEC
 
+        # Player movement
         keys = pygame.key.get_pressed()
         self.player.update(dt, keys)
 
-        self.update_camera(dt)
-
-        # Spawn scaling
-        spawn_interval = max(0.12, self.base_spawn_interval * (1.0 - 0.55 * self.difficulty))
-        self.spawn_timer -= dt
-        if self.spawn_timer <= 0:
-            extra = int(self.difficulty * 0.9)
-            spawn_count = 1 + min(5, extra // 2)
-            for _ in range(spawn_count):
-                self.enemies.append(spawn_enemy_at_screen_edge(self.player.pos, self.camera, self.difficulty))
-            self.spawn_timer = spawn_interval
+        # Weapons auto-fire
+        self.weapons.update(dt, self.player, self.aim_dir_world(), self.mouse_world_pos(), self.enemies)
 
         # Update enemies
         for e in self.enemies:
             e.update(dt, self.player.pos)
 
-        # ✅ Contact damage (TRUE DPS, ignores i-frames)
+        # Remove dead enemies → spawn EXP orbs
+        for e in self.enemies[:]:
+            if not e.alive:
+                self.enemies.remove(e)
+                self.player.kills += 1
+                self.orbs.append(ExpOrb(e.pos, e.exp_value))
+
+        # Enemy collision damage (continuous DPS)
         for e in self.enemies:
             if circle_hit(self.player.pos, self.player.radius, e.pos, e.radius):
                 self.player.take_contact_damage(S.ENEMY_CONTACT_DPS * dt)
+                
+                # 🔊 Play hit sound occasionally to avoid spam
+                if random.random() < 0.05:  # 5% chance per frame when touching
+                    self.sound_manager.play("player_hit", volume_override=0.5)
+                
                 if S.SHAKE_ON_HIT:
-                    self.shake = max(self.shake, S.SHAKE_STRENGTH)
+                    self.shake = max(self.shake, S.SHAKE_STRENGTH * 0.4)
 
-        # Weapons update (player hurts enemies ONLY via bullets)
-        aim_dir = self.aim_dir_world()
-        mw = self.mouse_world_pos()
-        self.weapons.update(dt, self.player, aim_dir, mw, self.enemies)
+        # Pick up orbs
+        for orb in self.orbs[:]:
+            if circle_hit(self.player.pos, S.EXP_PICKUP_RADIUS, orb.pos, orb.radius):
+                leveled_up = self.player.add_exp(orb.value)
+                self.orbs.remove(orb)
+                
+                if leveled_up:
+                    # 🔊 Play level up sound
+                    self.sound_manager.play("level_up", volume_override=0.6)
+                    
+                    self.pending_choices = self.upgrades.roll_choices(3)
+                    if self.pending_choices:
+                        self.state = "levelup"
 
-        # Cleanup dead enemies, spawn EXP orbs
-        alive_enemies = []
-        for e in self.enemies:
-            if e.alive:
-                alive_enemies.append(e)
-            else:
-                self.player.kills += 1
-                drops = 1 if random.random() < 0.75 else 2
-                for _ in range(drops):
-                    jitter = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
-                    self.orbs.append(ExpOrb(e.pos + jitter, e.exp_value))
-        self.enemies = alive_enemies
+        # Spawn enemies
+        self.spawn_timer -= dt
+        if self.spawn_timer <= 0:
+            spawn_rate = self.base_spawn_interval / (1.0 + 0.5 * self.difficulty)
+            self.spawn_timer = spawn_rate
+            
+            # 🔊 Pass sound manager to enemy spawning
+            enemy = spawn_enemy_at_screen_edge(
+                self.player.pos, 
+                self.camera, 
+                self.difficulty,
+                self.sound_manager  # Add this parameter
+            )
+            self.enemies.append(enemy)
 
-        # EXP pickup (magnet-ish when close)
-        picked = []
-        for orb in self.orbs:
-            d = self.player.pos.distance_to(orb.pos)
-            if d <= S.EXP_PICKUP_RADIUS:
-                if d > 1:
-                    orb.pos += (self.player.pos - orb.pos).normalize() * (520 * dt)
-            if d <= (self.player.radius + orb.radius + 4):
-                picked.append(orb)
-
-        for orb in picked:
-            self.orbs.remove(orb)
-            leveled = self.player.add_exp(orb.value)
-            if leveled:
-                self.pending_choices = self.upgrades.roll_choices(3)
-                self.state = "levelup"
-                break
+        self.update_camera(dt)
 
     def draw_grid(self, surf: pygame.Surface):
+        surf.fill(S.BLACK)
         cam = self.camera + self.shake_offset
 
-        left = cam.x
-        top = cam.y
-        right = cam.x + self.sw
-        bottom = cam.y + self.sh
-
-        gx0 = int(math.floor(left / S.GRID_SPACING) * S.GRID_SPACING)
-        gy0 = int(math.floor(top / S.GRID_SPACING) * S.GRID_SPACING)
-
-        surf.fill(S.BLACK)
-
-        x = gx0
-        while x < right:
-            sx = int(x - cam.x)
+        # Draw grid lines
+        for x in range(int(cam.x // S.GRID_SPACING) - 1, int((cam.x + self.sw) // S.GRID_SPACING) + 2):
+            sx = x * S.GRID_SPACING - cam.x
             pygame.draw.line(surf, S.GRID_COLOR, (sx, 0), (sx, self.sh), 1)
-            x += S.GRID_SPACING
 
-        y = gy0
-        while y < bottom:
-            sy = int(y - cam.y)
+        for y in range(int(cam.y // S.GRID_SPACING) - 1, int((cam.y + self.sh) // S.GRID_SPACING) + 2):
+            sy = y * S.GRID_SPACING - cam.y
             pygame.draw.line(surf, S.GRID_COLOR, (0, sy), (self.sw, sy), 1)
-            y += S.GRID_SPACING
 
-    def _draw_bar(self, surf: pygame.Surface, x: int, y: int, w: int, h: int, ratio: float, fg, label: str):
-        ratio = max(0.0, min(1.0, ratio))
-        r = _scaled(S.UI_BAR_RADIUS)
-
+    def _draw_ui_bar(
+        self,
+        surf: pygame.Surface,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        ratio: float,
+        color: tuple,
+        label: str,
+    ):
+        """
+        Draws a rounded-corner HP/EXP bar + label.
+        """
         # background
-        pygame.draw.rect(surf, S.UI_BG_DARK, (x, y, w, h), border_radius=r)
-        pygame.draw.rect(surf, S.UI_BG_LIGHT, (x, y, w, h), width=2, border_radius=r)
+        bg = (40, 40, 40)
+        pygame.draw.rect(surf, bg, (x, y, width, height), border_radius=_scaled(S.UI_BAR_RADIUS))
 
         # fill
-        fill_w = int(w * ratio)
+        fill_w = max(0, int(width * ratio))
         if fill_w > 0:
-            pygame.draw.rect(surf, fg, (x, y, fill_w, h), border_radius=r)
+            pygame.draw.rect(surf, color, (x, y, fill_w, height), border_radius=_scaled(S.UI_BAR_RADIUS))
 
-        # text
+        # border
+        border = (90, 90, 90)
+        pygame.draw.rect(surf, border, (x, y, width, height), 1, border_radius=_scaled(S.UI_BAR_RADIUS))
+
+        # label
         txt = self.ui_font_small.render(label, True, S.UI_TEXT)
-        surf.blit(txt, (x + _scaled(10), y + (h - txt.get_height()) // 2))
+        txt_x = x + (width - txt.get_width()) // 2
+        txt_y = y + (height - txt.get_height()) // 2
+        surf.blit(txt, (txt_x, txt_y))
 
     def draw_ui(self, surf: pygame.Surface):
-        # All HUD layout comes from settings.py
+        """
+        Draws HUD (HP, EXP, time, kills, level) using settings-driven layout.
+        """
         x0 = _scaled(S.UI_MARGIN_X)
-        y0 = _scaled(S.UI_MARGIN_Y)
+        y = _scaled(S.UI_MARGIN_Y)
         gap = _scaled(S.UI_ROW_GAP)
-
         bar_w = _scaled(S.UI_BAR_W)
         bar_h = _scaled(S.UI_BAR_H)
 
-        y = y0
-
-        # HP bar
+        # HP
         if S.SHOW_HP:
             hp_ratio = max(0.0, self.player.hp / max(1e-6, self.player.max_hp))
-            self._draw_bar(
+            label = f"HP: {int(self.player.hp)}/{int(self.player.max_hp)}"
+            self._draw_ui_bar(
                 surf,
                 x0,
                 y,
@@ -351,18 +358,20 @@ class Game:
                 bar_h,
                 hp_ratio,
                 S.UI_HP,
-                f"HP {int(self.player.hp)}/{int(self.player.max_hp)}",
+                label,
             )
             y += bar_h + gap
 
-        # EXP bar (and level text)
+        # Level (small text) + EXP bar
+        if S.SHOW_LEVEL:
+            lvl_txt = self.ui_font_med.render(f"Level: {self.player.level}", True, S.UI_TEXT)
+            surf.blit(lvl_txt, (x0, y))
+            y += lvl_txt.get_height() + gap
+
         if S.SHOW_EXP:
             exp_ratio = self.player.exp_ratio()
-            label = f"EXP {self.player.exp}/{self.player.exp_to_next}"
-            if S.SHOW_LEVEL:
-                label = f"LV {self.player.level}  " + label
-
-            self._draw_bar(
+            label = f"EXP: {self.player.exp}/{self.player.exp_to_next}"
+            self._draw_ui_bar(
                 surf,
                 x0,
                 y,
